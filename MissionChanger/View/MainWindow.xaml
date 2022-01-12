@@ -116,6 +116,7 @@
                     <GridViewColumn Header="Type" DisplayMemberBinding="{Binding MissionType}" />
                     <GridViewColumn Header="Aircraft" DisplayMemberBinding="{Binding Aircraft}" />
                     <GridViewColumn Header="Original Aircraft" DisplayMemberBinding="{Binding OriginalAircraft}" />
+                    <GridViewColumn Header="Filename" DisplayMemberBinding="{Binding Filename}" />
                 </GridView>
             </ListView.View>
         </ListView>

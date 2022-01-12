@@ -30,10 +30,19 @@ namespace MissionChanger.ViewModel
 
         public MainViewModel()
         {
+            var versionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
+            //object[] attribs = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyTrademarkAttribute), true);
+
 #if DEBUG
-            baseTitle = string.Format("{0} {1} Developer", Assembly.GetExecutingAssembly().GetName().Name, Assembly.GetExecutingAssembly().GetName().Version);
+            baseTitle = string.Format("{0} {1} Developer proudly presented by {2}", 
+                versionInfo.ProductName, 
+                versionInfo.ProductVersion, 
+                versionInfo.LegalTrademarks);
 #else
-            baseTitle = string.Format("{0} {1}", Assembly.GetExecutingAssembly().GetName().Name, Assembly.GetExecutingAssembly().GetName().Version);
+            baseTitle = string.Format("{0} {1} proudly presented by {2}", 
+                versionInfo.ProductName, 
+                versionInfo.ProductVersion, 
+                versionInfo.LegalTrademarks);
 #endif
             CommunityFolder = CommFolderDetector.GetCommFolder();
             MissionViewModel = new MissionViewModel();

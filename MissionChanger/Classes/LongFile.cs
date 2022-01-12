@@ -138,6 +138,17 @@ namespace MissionChanger.Classes
 
         }
 
+        internal static string RemoveWin32LongPath(string path)
+        {
+            if (path.StartsWith(@"\\?\UNC\"))
+                path = path.Remove(0, 8);
+            else
+            if (path.StartsWith(@"\\?\"))
+                path = path.Remove(0, 4);
+
+            return path;
+        }
+
         internal static string GetWin32LongPath(string path, bool check = false)
         {
             if (check && path.Length < MAX_PATH)
@@ -160,7 +171,7 @@ namespace MissionChanger.Classes
                 while (path.Contains("\\.\\")) path = path.Replace("\\.\\", "\\");
                 path = @"\\?\" + path;
             }
-            return path.TrimEnd('.'); ;
+            return path.TrimEnd('.'); 
         }
 
         private static string Combine(string path1, string path2)

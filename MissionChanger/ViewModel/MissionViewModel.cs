@@ -38,14 +38,15 @@ namespace MissionChanger.ViewModel
                     mission.MissionType = INI.Read("MissionType", "Main");
                     mission.Name = System.IO.Path.GetFileNameWithoutExtension(fltFile);
                     mission.Aircraft = INI.Read("Sim", "Sim.0");
-                    mission.Filename = fltFile;
+                    mission.Filename = LongFile.RemoveWin32LongPath(fltFile);
 
                     string backupname = GetBackupFilename(fltFile);
 
                     if (LongFile.Exists(backupname))
                         mission.OriginalAircraft = new INI(backupname).Read("Sim", "Sim.0");
 
-                    Missions.Add(mission);
+                    if (!string.IsNullOrWhiteSpace(mission.MissionType) && !string.IsNullOrWhiteSpace(mission.Aircraft))
+                        Missions.Add(mission);
                 }
                 
             }
@@ -67,7 +68,7 @@ namespace MissionChanger.ViewModel
                 if (!LongFile.Exists(backupname))
                     LongFile.Copy(selectedMission.Filename, backupname);
 
-                INI INI = new INI(selectedMission.Filename);
+                INI INI = new INI(LongFile.GetWin32LongPath(selectedMission.Filename));
                 INI.Write("Sim", selectedAircraft.Name, "Sim.0");
 
                 if (string.IsNullOrEmpty(SelectedMission.OriginalAircraft))
