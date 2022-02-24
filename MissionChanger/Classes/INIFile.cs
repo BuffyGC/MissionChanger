@@ -36,6 +36,14 @@ namespace MissionChanger.Classes
             return Default;
         }
 
+        public bool ReadDefault(bool Default, string Key, string Section = null)
+        {
+            if (KeyExists(Key, Section))
+                return Read(Key, Section).Equals("true", StringComparison.OrdinalIgnoreCase);
+
+            return Default;
+        }
+
         public int ReadDefault(int Default, string Key, string Section = null)
         {
             if (KeyExists(Key, Section))
@@ -72,6 +80,11 @@ namespace MissionChanger.Classes
             }
 
             return Default;
+        }
+
+        public void Write(string Key, bool Value, string Section = null)
+        {
+            NativeMethods.WritePrivateProfileString(Section ?? EXE, Key, Value.ToString(), Path);
         }
 
         public void Write(string Key, int Value, string Section = null)
@@ -160,7 +173,7 @@ namespace MissionChanger.Classes
                     {
                         string[] entry = s.Split('=');
 
-                        if (entry.Length > 0)
+                        if (entry.Length > 0 && !string.IsNullOrWhiteSpace(entry[0]))
                             entries.Add(entry[0]);
                     }
                 }
@@ -169,6 +182,5 @@ namespace MissionChanger.Classes
 
             return entries;
         }
-
     }
 }

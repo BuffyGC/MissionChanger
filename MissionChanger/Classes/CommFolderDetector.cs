@@ -27,7 +27,7 @@ namespace MissionChanger.Classes
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Packages\Microsoft.FlightSimulatorFlightSimDisc_8wekyb3d8bbwe\LocalCache\UserCfg.opt"
         };
 
-        internal static string GetCommFolder()
+        internal static string GetFSBaseFolder()
         {
             string s = string.Empty;
 
@@ -59,7 +59,7 @@ namespace MissionChanger.Classes
                     string path = UserCfg[i].Substring(pFrom, pTo - pFrom);
 
                     if (IsFSBaseDir(path))
-                        return path + @"\Community";
+                        return path; //+ @"\Community";
                 }
             }
 

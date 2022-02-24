@@ -2,6 +2,8 @@
 using MissionChanger.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -15,15 +17,17 @@ namespace MissionChanger.ViewModel
         public string BaseTitle { get => baseTitle; set => SetField(ref baseTitle, value); }
         private string baseTitle;
 
-        public string CommunityFolder { get => communityFolder; set => SetField(ref communityFolder, value); }
-        private string communityFolder;
+        public string FSBaseFolder { get => _FSBaseFolder; set => SetField(ref _FSBaseFolder, value); }
+        private string _FSBaseFolder;
 
         public RelayCommand CommandSelectPath { get; private set; }
         public RelayCommand CommandLoadAddOns { get; private set; }
-        public RelayCommand CommandSetAircraft { get; private set; }
+        public RelayCommand CommandSaveMissions { get; private set; }
+        public RelayCommand CommandOpenInExplorer { get; private set; }
 
         public MissionViewModel MissionViewModel { get => missionViewModel; set => SetField(ref missionViewModel, value); }
         private MissionViewModel missionViewModel;
+
 
         public AircraftsViewModel AircraftsViewModel  { get => aircraftsViewModel; set => SetField(ref aircraftsViewModel, value); }
         private AircraftsViewModel aircraftsViewModel;
@@ -44,15 +48,52 @@ namespace MissionChanger.ViewModel
                 versionInfo.ProductVersion, 
                 versionInfo.LegalTrademarks);
 #endif
-            CommunityFolder = CommFolderDetector.GetCommFolder();
+            FSBaseFolder = CommFolderDetector.GetFSBaseFolder();
             MissionViewModel = new MissionViewModel();
             AircraftsViewModel = new AircraftsViewModel();
 
             CommandSelectPath = new RelayCommand(OnSelectPath);
             CommandLoadAddOns = new RelayCommand(OnLoadAddons);
-            CommandSetAircraft = new RelayCommand(OnSetAircraft);
+            CommandSaveMissions = new RelayCommand(OnSaveMissions);
+            CommandOpenInExplorer = new RelayCommand(OnOpenInExplorer);
 
             MissionViewModel.PropertyChanged += Mission_PropertyChanged;
+            AircraftsViewModel.PropertyChanged += AircraftsViewModel_PropertyChanged;
+
+            if (string.IsNullOrWhiteSpace(FSBaseFolder))
+                CommandSelectPath.Execute(null);
+
+            //if (!string.IsNullOrWhiteSpace(FSBaseFolder))
+            //    CommandLoadAddOns.Execute(null);
+        }
+
+        private void OnOpenInExplorer(object obj)
+        {
+            if (MissionViewModel.SelectedMission != null)
+            {
+                string path = "explorer.exe";
+                string file = MissionViewModel.SelectedMission.Filename;
+
+                ProcessStartInfo psi = new ProcessStartInfo();
+                psi.FileName = path;
+
+                if (!string.IsNullOrEmpty(file))
+                {
+                    psi.Arguments = $"/select, \"{file}\"";
+                }
+
+                Process.Start(psi);
+            }
+        }
+
+        private void AircraftsViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(AircraftsViewModel.SelectedAircraft) 
+                && AircraftsViewModel.SelectedAircraft != null)
+            {
+                if (MissionViewModel.SelectedMission != null)
+                    MissionViewModel.SelectedMission.Aircraft = AircraftsViewModel.SelectedAircraft.Name;
+            }
         }
 
         private void Mission_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -61,7 +102,7 @@ namespace MissionChanger.ViewModel
             {
                 Aircraft aircraft = AircraftsViewModel.Aircrafts.FirstOrDefault(a => a.Name.Equals(MissionViewModel.SelectedMission.Aircraft, StringComparison.OrdinalIgnoreCase));
 
-                if (aircraft != null)
+                //if (aircraft != null)
                     AircraftsViewModel.SelectedAircraft = aircraft;
             }
         }
@@ -84,7 +125,7 @@ namespace MissionChanger.ViewModel
 
         private void ReadAircrafts()
         {
-            string p = communityFolder.Replace("Community", "");
+            string p = FSBaseFolder.Replace("Community", "");
 
             AircraftsViewModel.LoadAircrafts(p);
         }
@@ -92,20 +133,20 @@ namespace MissionChanger.ViewModel
 
         private void ReadMissions()
         {
-            MissionViewModel.LoadMissions(communityFolder);
+            MissionViewModel.LoadMissions(FSBaseFolder);
         }
 
 
-        private void OnSetAircraft(object obj)
+        private void OnSaveMissions(object obj)
         {
             try
             {
-                MissionViewModel.SetAircraft(AircraftsViewModel.SelectedAircraft);
+                MissionViewModel.SaveMissions();
 
             }
             catch (Exception ex)
             {
-                MessageBox.Show("something went wrong setting the aircraft" +
+                MessageBox.Show("something went wrong ssaving your missions" +
                     Environment.NewLine +
                     ex.Message);
 
@@ -121,7 +162,7 @@ namespace MissionChanger.ViewModel
                 {
                     ShowNewFolderButton = false,
                     Description = "Add-On-Path",
-                    SelectedPath = CommunityFolder,
+                    SelectedPath = FSBaseFolder,
                     RootFolder = Environment.SpecialFolder.MyComputer
                 };
 
@@ -129,7 +170,7 @@ namespace MissionChanger.ViewModel
 
                 if (dlgr == System.Windows.Forms.DialogResult.OK)
                 {
-                    CommunityFolder = openFolderBrowserDialog.SelectedPath;
+                    FSBaseFolder = openFolderBrowserDialog.SelectedPath;
                 }
             }
 

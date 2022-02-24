@@ -4,81 +4,63 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MissionChanger"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:ViewModel="clr-namespace:MissionChanger.ViewModel" 
+        xmlns:Model="clr-namespace:MissionChanger.Model" 
         mc:Ignorable="d"
-        Title="{Binding BaseTitle}" Height="450" Width="800" WindowStartupLocation="CenterScreen" WindowStyle="ThreeDBorderWindow">
+        Title="{Binding BaseTitle}" Height="600" Width="1200" WindowStartupLocation="CenterScreen" WindowStyle="ThreeDBorderWindow"
+    >
+
+    <!--
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding CommandLoadAddOns}"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    -->
 
     <Window.Resources>
         <Style TargetType="{x:Type TextBox}">
             <!--Setter Property="Height" Value="20" /-->
             <Setter Property="Margin" Value="3" />
         </Style>
+
         <Style TargetType="{x:Type ListBox}">
             <!--Setter Property="Height" Value="20" /-->
             <Setter Property="Margin" Value="3" />
         </Style>
+
         <Style TargetType="{x:Type CheckBox}">
             <Setter Property="Margin" Value="4,6,8,0" />
         </Style>
-        <Style TargetType="{x:Type DataGridCell}">
-            <!--Setter Property="Height" Value="20" /-->
-            <!-- Setter Property="Margin" Value="30" /-->
-            <Setter Property="Padding" Value="4" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type DataGridCell}">
-                        <Border Padding="{TemplateBinding Padding}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" 
-                                Background="{TemplateBinding Background}" 
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+
         <Style TargetType="{x:Type ComboBox}">
             <!---Setter Property="Height" Value="20" /-->
             <Setter Property="Margin" Value="3" />
         </Style>
+
         <Style TargetType="{x:Type Button}">
             <Setter Property="Height" Value="20" />
             <Setter Property="Padding" Value="4,0" />
             <Setter Property="Margin" Value="3" />
         </Style>
-        <Style x:Key="CellRightAlign">
-            <Setter Property="FrameworkElement.HorizontalAlignment"
-            Value="Right" />
+
+        <Style x:Key="resizedCalendarItem" TargetType="{x:Type Calendar}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Calendar}">
+                        <Viewbox Height="250"
+                        Width="250">
+                            <CalendarItem x:Name="PART_CalendarItem"
+                                BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" />
+                        </Viewbox>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
-        <Style x:Key="CellWrap">
-            <Setter Property="TextBlock.TextWrapping" Value="Wrap"/>
-        </Style>
-
-        <Style x:Key="EditModeSwitch">
-            <Setter Property="FrameworkElement.Margin" Value="3" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding ModeType}" Value="EditMode">
-                    <Setter Property="UIElement.IsEnabled" Value="true"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding ModeType}" Value="ImportMode">
-                    <Setter Property="UIElement.IsEnabled" Value="false"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="ImportModeSwitch">
-            <Setter Property="FrameworkElement.Margin" Value="3" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding ModeType}" Value="ImportMode">
-                    <Setter Property="UIElement.IsEnabled" Value="true"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding ModeType}" Value="EditMode">
-                    <Setter Property="UIElement.IsEnabled" Value="false"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>
 
     <Window.DataContext>
@@ -90,9 +72,8 @@
     <Grid Background="#FFE5E5E5" d:DataContext="{d:DesignInstance ViewModel:MainViewModel, IsDesignTimeCreatable=True}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="120"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="80"/>
-            <ColumnDefinition Width="0.917"/>
+            <ColumnDefinition Width="30*"/>
+            <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -101,32 +82,225 @@
         </Grid.RowDefinitions>
 
         <Label Grid.Row="0" Grid.Column="0" Content="Folder"  Grid.RowSpan="2"/>
-        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding CommunityFolder}" IsEnabled="False" />
-        <Button Grid.Row="0" Grid.Column="2" Content="Path..." Command="{Binding CommandSelectPath}" VerticalAlignment="Center" />
+        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding FSBaseFolder}" IsEnabled="False" />
 
+        <Grid Grid.Row="0" Grid.Column="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Row="0" Grid.Column="0" Content="Path..." Command="{Binding CommandSelectPath}" VerticalAlignment="Center" />
+            <Button Grid.Row="0" Grid.Column="1" Content="Read..." Command="{Binding CommandLoadAddOns}" VerticalAlignment="Top" />
+        </Grid>
+
+        <!--
         <Label Grid.Row="1" Grid.Column="0" Content="Missions"/>
-        <Button Grid.Row="1" Grid.Column="2" Content="Read..." Command="{Binding CommandLoadAddOns}" VerticalAlignment="Top" />
-        <ListView Grid.Row="1" Grid.Column="1" 
-                  ItemsSource="{Binding MissionViewModel.Missions}"
-                  SelectedItem="{Binding MissionViewModel.SelectedMission}"
-                  ScrollViewer.VerticalScrollBarVisibility="Auto">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" />
-                    <GridViewColumn Header="Type" DisplayMemberBinding="{Binding MissionType}" />
-                    <GridViewColumn Header="Aircraft" DisplayMemberBinding="{Binding Aircraft}" />
-                    <GridViewColumn Header="Original Aircraft" DisplayMemberBinding="{Binding OriginalAircraft}" />
-                    <GridViewColumn Header="Filename" DisplayMemberBinding="{Binding Filename}" />
-                </GridView>
-            </ListView.View>
-        </ListView>
+        -->
 
-        <Label Grid.Row="2" Grid.Column="0" Content="Aircrafts" />
-        <Button Grid.Row="2" Grid.Column="2" Content="Set" Command="{Binding CommandSetAircraft}" VerticalAlignment="Center"/>
 
-        <ComboBox Grid.Row="2"
+        <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="4" Margin="6,1,3,3">
+                <Italic>[Italic] - protected mission</Italic>  |  
+                <Bold>[Bold] - unsaved changes</Bold>  |  
+                <Run Text="[Red - GPS lost/not defined ]" Foreground="Red"/>
+            </TextBlock>
+
+            <TreeView x:Name="treeView" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
+                  ItemsSource="{Binding MissionViewModel.Missions}" >
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <!-- We have to select the item which is right-clicked on -->
+                        <EventSetter Event="TreeViewItem.PreviewMouseRightButtonDown"
+                                 Handler="TreeViewItem_PreviewMouseRightButtonDown"/>
+
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsChanged}" Value="true">
+                                <Setter Property="TreeViewItem.FontWeight" Value="Bold" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsProtected}" Value="true">
+                                <Setter Property="TreeViewItem.FontStyle" Value="Italic" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding LostGPS}" Value="true">
+                                <Setter Property="TreeViewItem.Foreground" Value="Red" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type Model:Mission}" 
+                                              ItemsSource="{Binding SavedMissions}">
+                        <HierarchicalDataTemplate.ItemContainerStyle>
+                            <Style >
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsChanged}" Value="true">
+                                        <Setter Property="TreeViewItem.FontWeight" Value="Bold" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsChanged}" Value="false">
+                                        <Setter Property="TreeViewItem.FontWeight" Value="Normal" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsProtected}" Value="true">
+                                        <Setter Property="TreeViewItem.FontStyle" Value="Italic" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsProtected}" Value="false">
+                                        <Setter Property="TreeViewItem.FontStyle" Value="Normal" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding LostGPS}" Value="true">
+                                        <Setter Property="TreeViewItem.Foreground" Value="Red" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </HierarchicalDataTemplate.ItemContainerStyle>
+                        <TextBlock Text="{Binding Title}">
+
+                        </TextBlock>
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
+
+                <TreeView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Open in Explorer..."
+                              Command="{Binding CommandOpenInExplorer}"/>
+                    </ContextMenu>
+                </TreeView.ContextMenu>
+
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="SelectedItemChanged">
+                        <i:InvokeCommandAction Command="{Binding MissionViewModel.SelectedItemChanged}"
+                                   CommandParameter="{Binding ElementName=treeView, Path=SelectedItem}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </TreeView>
+        </Grid>
+
+        <DockPanel Grid.Row="1" Grid.Column="2">
+            <Grid DockPanel.Dock="Bottom">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Row="0" Grid.Column="2" Content="Save" Command="{Binding CommandSaveMissions}" VerticalAlignment="Center"/>
+            </Grid>
+
+            <!--
+              Visibility="{Binding MissionViewModel.IsMissionSelected, Converter={StaticResource BooleanToVisibilityConverter }}"
+            -->
+            <Grid 
+              Visibility="{Binding MissionViewModel.IsMissionSelected, Converter={StaticResource BooleanToVisibilityConverter }}"
+                d:Visibility="Visible"
+                >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Row="0" Grid.Column="0"
+                   Content="MissionType"/>
+                <TextBox Grid.Row="0" Grid.Column="1"
+                     IsEnabled="False"
+                     Text="{Binding MissionViewModel.SelectedMission.MissionType}" FontStyle="Normal"/>
+
+                <Label Grid.Row="1" Grid.Column="0"
+                   Content="Name"/>
+                <TextBox Grid.Row="1" Grid.Column="1"
+                     IsEnabled="False"
+                     Text="{Binding MissionViewModel.SelectedMission.Name}"/>
+                <Label Grid.Row="2" Grid.Column="0"
+                   Content="Title"/>
+                <TextBox Grid.Row="2" Grid.Column="1"
+                     IsEnabled="False"
+                     Text="{Binding MissionViewModel.SelectedMission.Title}"/>
+
+                <Label Grid.Row="3" Grid.Column="0"
+                   Content="Org. Aircraft"/>
+                <TextBox Grid.Row="3" Grid.Column="1"
+                     IsEnabled="False"
+                     Text="{Binding MissionViewModel.SelectedMission.OriginalAircraft}"/>
+                <Label Grid.Row="4" Grid.Column="0"
+                   Content="Aircraft"/>
+                <ComboBox Grid.Row="4"
                   Grid.Column="1"
                   ItemsSource="{Binding AircraftsViewModel.Aircrafts}"
                   SelectedItem="{Binding AircraftsViewModel.SelectedAircraft, Mode=TwoWay}" />
+
+                <!--
+            <TextBox Grid.Row="4" Grid.Column="1"
+                     IsEnabled="False"
+                     Text="{Binding MissionViewModel.SelectedMission.Aircraft}" />
+            -->
+                <Label Grid.Row="5" Grid.Column="0"
+                   Content="Date"/>
+                <DatePicker xml:lang="en-US" Grid.Row="5" Grid.Column="1"  Text="{Binding MissionViewModel.SelectedMission.DateTime}" 
+                        SelectedDateFormat="Long" FirstDayOfWeek="Monday" IsTodayHighlighted="True" 
+                         Margin="3,0,3,0"/>
+
+                <Label Grid.Row="6" Grid.Column="0"
+                   Content="Time"/>
+                <Grid Grid.Row="6" Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Text="{Binding MissionViewModel.SelectedMission.Hour, StringFormat={}{0:00}}" />
+                    <TextBox Grid.Column="1" Text="{Binding MissionViewModel.SelectedMission.Minute, StringFormat={}{0:00}}" />
+                    <TextBox Grid.Column="2" Text="{Binding MissionViewModel.SelectedMission.Second, StringFormat={}{0:00}}" />
+                </Grid>
+
+                <Label Grid.Row="7" Grid.Column="0"
+                   Content="Weather"/>
+                <CheckBox Grid.Row="7" Grid.Column="1"
+                          Content="UseWeatherFile"
+                          IsChecked="{Binding MissionViewModel.SelectedMission.UseWeatherFile}"
+                          IsEnabled="{Binding MissionViewModel.SelectedMission.HasWeatherFile}"/>
+                <CheckBox Grid.Row="8" Grid.Column="1"
+                      Content="UseLiveWeather"
+                      IsChecked="{Binding MissionViewModel.SelectedMission.UseLiveWeather}" Height="20"/>
+                <CheckBox Grid.Row="9" Grid.Column="1"
+                      Content="WeatherCanBeLive"
+                      IsChecked="{Binding MissionViewModel.SelectedMission.WeatherCanBeLive}" Height="20"/>
+                <Label Grid.Row="10" Grid.Column="0"
+                   Content="Preset"/>
+                <TextBox Grid.Row="10" Grid.Column="1" 
+                     Text="{Binding MissionViewModel.SelectedMission.WeatherPresetFile}" />
+
+                <Label Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="2"
+                       Content="This file is protected. Any change can hide it in the sim."
+                       Foreground="Red"
+                       FontWeight="Bold"
+                       Visibility="{Binding MissionViewModel.SelectedMission.IsProtected, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Center"/>
+
+                <Button Grid.Row="12" Grid.Column="1"
+                    Content="Restore corrupt GPS and Flightplan" 
+                    IsEnabled="False"
+                    Visibility="Collapsed"/>
+
+            </Grid>
+
+        </DockPanel>
+
+
     </Grid>
 </Window>
