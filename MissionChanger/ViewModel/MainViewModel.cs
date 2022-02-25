@@ -49,13 +49,14 @@ namespace MissionChanger.ViewModel
                 versionInfo.LegalTrademarks);
 #endif
             FSBaseFolder = CommFolderDetector.GetFSBaseFolder();
-            MissionViewModel = new MissionViewModel();
-            AircraftsViewModel = new AircraftsViewModel();
 
             CommandSelectPath = new RelayCommand(OnSelectPath);
             CommandLoadAddOns = new RelayCommand(OnLoadAddons);
             CommandSaveMissions = new RelayCommand(OnSaveMissions);
             CommandOpenInExplorer = new RelayCommand(OnOpenInExplorer);
+
+            MissionViewModel = new MissionViewModel();
+            AircraftsViewModel = new AircraftsViewModel();
 
             MissionViewModel.PropertyChanged += Mission_PropertyChanged;
             AircraftsViewModel.PropertyChanged += AircraftsViewModel_PropertyChanged;
@@ -112,6 +113,16 @@ namespace MissionChanger.ViewModel
             try
             {
                 UIServices.SetBusyState();
+
+                MissionViewModel.PropertyChanged -= Mission_PropertyChanged;
+                AircraftsViewModel.PropertyChanged -= AircraftsViewModel_PropertyChanged;
+
+                MissionViewModel = new MissionViewModel();
+                AircraftsViewModel = new AircraftsViewModel();
+
+                MissionViewModel.PropertyChanged += Mission_PropertyChanged;
+                AircraftsViewModel.PropertyChanged += AircraftsViewModel_PropertyChanged;
+
                 ReadAircrafts();
                 ReadMissions();
             }

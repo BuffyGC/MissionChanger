@@ -28,6 +28,19 @@ namespace MissionChanger.Model
         public DateTime DateTime { get => dateTime; set => SetField(ref dateTime, value); }
         private DateTime dateTime;
 
+        public DateTime DateOnly
+        {
+            get => dateTime.Date;
+            set
+            {
+                if (DateTime.Date.CompareTo(value) != 0)
+                {
+                    DateTime dt = new DateTime(value.Year, value.Month, value.Day, Hour, Minute, Second);
+                    SetField(ref dateTime, dt, nameof(DateTime));
+                }
+            }
+        }
+
         public int Year { get => DateTime.Year; set => SetField(ref dateTime, new DateTime(value, DateTime.Month, DateTime.Day, DateTime.Hour, DateTime.Minute, DateTime.Second)); }
         public int Month { get => DateTime.Month; set => SetField(ref dateTime, new DateTime(DateTime.Year, value, DateTime.Day, DateTime.Hour, DateTime.Minute, DateTime.Second)); }
         public int Day { get => DateTime.Day; set => SetField(ref dateTime, new DateTime(DateTime.Year, DateTime.Month, value, DateTime.Hour, DateTime.Minute, DateTime.Second)); }
