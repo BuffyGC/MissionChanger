@@ -341,9 +341,7 @@ namespace MissionChanger.ViewModel
             string path = Path.GetDirectoryName(fullname);
             string filename = Path.GetFileNameWithoutExtension(fullname);
 
-            string backupname = Path.Combine(path, filename + ".bak");
-
-            return backupname;
+            return Path.Combine(path, filename + ".bak");
         }
     }
 }
