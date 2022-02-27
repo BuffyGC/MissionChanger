@@ -74,6 +74,9 @@ namespace MissionChanger.Model
         public bool HasWeatherFile { get => hasWeatherFile; set => SetField(ref hasWeatherFile, value); }
         private bool hasWeatherFile = false;
 
+        public bool HasBackup { get => hasBackup; set => SetField(ref hasBackup, value); }
+        private bool hasBackup = false;
+
         public Manifest Manifest { get => manifest; set => SetField(ref manifest, value); }
         private Manifest manifest = null;
 

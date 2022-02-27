@@ -23,11 +23,52 @@ namespace MissionChanger.ViewModel
         public bool IsMissionSelected => SelectedMission != null;
 
         public RelayCommand<Mission> SelectedItemChanged { get; private set; } = null;
+        public RelayCommand CommandRestoreOriginal { get; private set; } = null;
 
 
         public MissionViewModel()
         {
             SelectedItemChanged = new RelayCommand<Mission>( c => SelectedMission = c );
+
+            CommandRestoreOriginal = new RelayCommand(OnRestoreOriginal);
+        }
+
+        private void OnRestoreOriginal(object obj)
+        {
+            try
+            {
+                if (SelectedMission != null)
+                {
+                    RestoreOriginal(SelectedMission);
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        private void RestoreOriginal(Mission mission)
+        {
+            string backupname = GetBackupFilename(mission.Filename);
+
+            if (LongFile.Exists(backupname))
+            {
+                string fltFile = mission.Filename;
+                LongFile.Copy(backupname, fltFile, true);
+                LongFile.Delete(backupname);
+
+                INI INI = new INI(fltFile);
+
+                mission.Aircraft = INI.Read("Sim", "Sim.0");
+                mission.DateTime = ReadDateTime(INI);
+
+                ReadWeather(INI, mission);
+                mission.OriginalAircraft = mission.Aircraft;
+                mission.HasBackup = false;
+                mission.IsChanged = false;
+                SelectedMission = null;
+                SelectedMission = mission;
+            }
         }
 
         internal void LoadMissions(string communityFolder)
@@ -61,9 +102,15 @@ namespace MissionChanger.ViewModel
                         string backupname = GetBackupFilename(fltFile);
 
                         if (LongFile.Exists(backupname))
+                        {
                             mission.OriginalAircraft = new INI(backupname).Read("Sim", "Sim.0");
+                            mission.HasBackup = true;
+                        }
                         else
+                        {
                             mission.OriginalAircraft = mission.Aircraft;
+                            mission.HasBackup = false;
+                        }
 
                         AddSavedMissions(mission);
 
@@ -178,9 +225,15 @@ namespace MissionChanger.ViewModel
                                 string backupname = GetBackupFilename(fltFile);
 
                                 if (LongFile.Exists(backupname))
+                                {
                                     savedMission.OriginalAircraft = new INI(backupname).Read("Sim", "Sim.0");
+                                    savedMission.HasBackup = true;
+                                }
                                 else
+                                {
                                     savedMission.OriginalAircraft = savedMission.Aircraft;
+                                    savedMission.HasBackup = false;
+                                }
 
                                 if (!string.IsNullOrWhiteSpace(savedMission.MissionType) && !string.IsNullOrWhiteSpace(savedMission.Aircraft))
                                 {
@@ -242,6 +295,8 @@ namespace MissionChanger.ViewModel
 
                 if (!LongFile.Exists(backupname))
                     LongFile.Copy(selectedMission.Filename, backupname);
+
+                mission.HasBackup = true;
 
                 INI INI = new INI(LongFile.GetWin32LongPath(selectedMission.Filename));
                 INI.Write("Sim", mission.Aircraft, "Sim.0");
