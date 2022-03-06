@@ -77,6 +77,9 @@ namespace MissionChanger.Model
         public bool HasBackup { get => hasBackup; set => SetField(ref hasBackup, value); }
         private bool hasBackup = false;
 
+        public string ManifestFile { get => manifestFile; set => SetField(ref manifestFile, value); }
+        private string manifestFile = null;
+
         public Manifest Manifest { get => manifest; set => SetField(ref manifest, value); }
         private Manifest manifest = null;
 

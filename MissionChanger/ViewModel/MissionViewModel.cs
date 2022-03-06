@@ -49,7 +49,15 @@ namespace MissionChanger.ViewModel
 
         private void RestoreOriginal(Mission mission)
         {
-            string backupname = GetBackupFilename(mission.Filename);
+            string backupname = GetBackupFilename(mission.ManifestFile);
+
+            if (LongFile.Exists(backupname))
+            {
+                LongFile.Copy(backupname, mission.ManifestFile, true);
+                LongFile.Delete(backupname);
+            }
+
+            backupname = GetBackupFilename(mission.Filename);
 
             if (LongFile.Exists(backupname))
             {
@@ -87,7 +95,9 @@ namespace MissionChanger.ViewModel
                     if (mission.MissionType.Equals("BushTrip", StringComparison.OrdinalIgnoreCase))
                     {
                         mission.Name = Path.GetFileNameWithoutExtension(fltFile);
-                        mission.Manifest = GetManifest(fltFile);
+
+                        mission.ManifestFile = GetManifestFile(fltFile);
+                        mission.Manifest = GetManifest(mission.ManifestFile);
                         mission.IsProtected = mission.Manifest.total_package_size?.Length > 0;
 
                         mission.HasWeatherFile = LongFile.Exists(Path.Combine(Path.GetDirectoryName(fltFile), "Weather.WPR"));
@@ -137,7 +147,8 @@ namespace MissionChanger.ViewModel
                 (sender as Mission).IsChanged = true;
         }
 
-        private Manifest GetManifest(string fltFile)
+
+        private string GetManifestFile(string fltFile)
         {
             DirectoryInfo di = Directory.GetParent(Path.GetDirectoryName(fltFile));
 
@@ -146,19 +157,51 @@ namespace MissionChanger.ViewModel
                 string manifest_filename = Path.Combine(di.FullName, "manifest.json");
                 if (LongFile.Exists(manifest_filename))
                 {
-                    string jsonData = LongFile.ReadAllText(manifest_filename);
-                    JavaScriptSerializer js = new JavaScriptSerializer();
-                    js.MaxJsonLength = jsonData.Length + 10;
-
-                    Manifest mf = js.Deserialize<Manifest>(jsonData);
-
-                    return mf;
+                    return manifest_filename;
                 }
 
                 di = di.Parent;
             }
 
             return null;
+        }
+
+        private Manifest GetManifest(string manifestFile)
+        {
+            if (LongFile.Exists(manifestFile))
+            {
+                string jsonData = LongFile.ReadAllText(manifestFile);
+                JavaScriptSerializer js = new JavaScriptSerializer();
+                js.MaxJsonLength = jsonData.Length + 10;
+
+                Manifest mf = js.Deserialize<Manifest>(jsonData);
+                return mf;
+            }
+
+            return null;
+        }
+
+        private long GetPackageSize(string manifestFile)
+        {
+            DirectoryInfo di = new DirectoryInfo(Path.GetDirectoryName(manifestFile));
+            return GetDirectorySize(di);
+        }
+
+        private long GetDirectorySize(DirectoryInfo di)
+        {
+            long size = 0;
+
+            foreach (FileInfo fi in di.GetFiles())
+            {
+                size += fi.Length;
+            }
+
+            foreach (DirectoryInfo di2 in di.GetDirectories())
+            {
+                size += GetDirectorySize(di2);
+            }
+
+            return size;
         }
 
         private static string SavedMissonsPath()
@@ -298,6 +341,9 @@ namespace MissionChanger.ViewModel
 
                 mission.HasBackup = true;
 
+                DateTime creationDateTime = LongFile.GetCreationTime(selectedMission.Filename);
+                DateTime lastWriteDateTime = LongFile.GetLastWriteTime(selectedMission.Filename);
+
                 INI INI = new INI(LongFile.GetWin32LongPath(selectedMission.Filename));
                 INI.Write("Sim", mission.Aircraft, "Sim.0");
 
@@ -330,16 +376,55 @@ namespace MissionChanger.ViewModel
                     INI.Write("WeatherCanBeLive", false, "Weather");
                 }
 
+                if (mission.Manifest?.total_package_size?.Length > 0)
+                {
+                    string backupName = GetBackupFilename(mission.ManifestFile);
+
+                    if (!LongFile.Exists(backupName))
+                        LongFile.Copy(mission.ManifestFile, backupName);
+
+                    long packageSize = GetPackageSize(mission.ManifestFile);
+
+                    if (packageSize > 0)
+                    {
+                        DateTime creationDateTimeManifest = LongFile.GetCreationTime(mission.ManifestFile);
+                        DateTime lastWriteDateTimeManifest = LongFile.GetLastWriteTime(mission.ManifestFile);
+
+                        int l = mission.Manifest.total_package_size.Length;
+
+                        string s = "00000000000000000000" + packageSize.ToString();
+
+                        s = s.Substring(s.Length - l);
+
+                        string mfText = LongFile.ReadAllText(mission.ManifestFile);
+
+                        int p1 = mfText.IndexOf(nameof(Manifest.total_package_size));
+
+                        int p2 = mfText.IndexOf("\"", p1+ nameof(Manifest.total_package_size).Length+1);
+
+                        mfText = mfText.Remove(p2 + 1, l);
+                        mfText = mfText.Insert(p2 + 1, s);
+
+                        LongFile.WriteAllText(mission.ManifestFile, mfText, new UTF8Encoding(false));
+
+                        LongFile.SetCreationTime(mission.ManifestFile, creationDateTimeManifest);
+                        LongFile.SetLastWriteTime(mission.ManifestFile, lastWriteDateTimeManifest);
+                    }
+                }
+
+                LongFile.SetCreationTime(selectedMission.Filename, creationDateTime);
+                LongFile.SetLastWriteTime(selectedMission.Filename, lastWriteDateTime);
+
                 ReadWeather(INI, mission);
 
                 mission.IsChanged = false;
             }
         }
 
-        string GetBackupFilename(string fullname)
+        string GetBackupFilename(string fullname, bool remove_ext = true)
         {
             string path = Path.GetDirectoryName(fullname);
-            string filename = Path.GetFileNameWithoutExtension(fullname);
+            string filename = remove_ext ? Path.GetFileNameWithoutExtension(fullname) : Path.GetFileName(fullname);
 
             return Path.Combine(path, filename + ".bak");
         }

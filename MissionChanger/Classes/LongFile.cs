@@ -129,13 +129,36 @@ namespace MissionChanger.Classes
             return System.IO.File.Create(path);
         }
 
+        internal static DateTime GetCreationTime(string path)
+        {
+            if (path.Length >= MAX_PATH)
+                path = GetWin32LongPath(path);
+
+            return System.IO.File.GetCreationTime(path);
+        }
+
+        internal static void SetCreationTime(string path, DateTime creationTime)
+        {
+            if (path.Length >= MAX_PATH)
+                path = GetWin32LongPath(path);
+
+            System.IO.File.SetCreationTime(path, creationTime);
+        }
+
         internal static DateTime GetLastWriteTime(string path)
         {
             if (path.Length >= MAX_PATH)
                 path = GetWin32LongPath(path);
 
             return System.IO.File.GetLastWriteTime(path);
+        }
 
+        internal static void SetLastWriteTime(string path, DateTime lastWriteTime)
+        {
+            if (path.Length >= MAX_PATH)
+                path = GetWin32LongPath(path);
+
+            System.IO.File.SetLastWriteTime(path, lastWriteTime);
         }
 
         internal static string RemoveWin32LongPath(string path)
