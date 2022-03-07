@@ -319,6 +319,22 @@ namespace MissionChanger.ViewModel
         {
             foreach (Mission mission in Missions)
             {
+                if (mission.IsChanged && mission.IsProtected)
+                {
+                    if (MessageBoxResult.No ==
+                        MessageBox.Show("You changed at least one protected mission. " +
+                        "This can prevent the simulator from starting or the mission becomes impossible to start." + Environment.NewLine +
+                        "Do you want to proceed?", "MissionChanger", MessageBoxButton.YesNo))
+                    {
+                        return;
+                    }
+
+                    break;
+                }
+            }
+
+            foreach (Mission mission in Missions)
+            {
                 if (mission.IsChanged)
                     SaveMission(mission);
 
