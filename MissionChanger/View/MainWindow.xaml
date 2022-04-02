@@ -60,6 +60,40 @@
             </Setter>
         </Style>
 
+        <Style x:Key="ComboBoxItemStyleAircraft" TargetType="{x:Type ComboBoxItem}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Grid x:Name="gd" TextElement.Foreground="Black">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="350" />
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="350" />
+                                <ColumnDefinition Width="0" />
+                                <ColumnDefinition Width="0" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Margin="{Binding Margin}" Text="{Binding Name}" />
+                            <TextBlock Grid.Column="1" Margin="2" Text="{Binding SourceType}" />
+                            <TextBlock Grid.Column="2" Margin="2" Text="{Binding BaseName}" />
+                            <TextBlock Grid.Column="3" Margin="2" Text="{Binding SourcePath}" />
+                            <TextBlock Grid.Column="4" Margin="2" Text="{Binding AltSourcePath}" />
+
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="ListBoxItem.IsSelected" Value="True">
+                                <Setter TargetName="gd"  Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
+                                <Setter TargetName="gd"  Property="TextElement.Foreground" Value="Black"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="gd"  Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                                <Setter TargetName="gd"  Property="TextElement.Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>
 
@@ -89,7 +123,7 @@
             <Label Grid.Row="0" Grid.Column="0" Content="Folder"  Grid.RowSpan="2"/>
             <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding FSBaseFolder}" IsEnabled="False" />
         </Grid>
-        
+
         <Grid Grid.Row="0" Grid.Column="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -257,8 +291,40 @@
                 <ComboBox Grid.Row="4"
                   Grid.Column="1"
                   ItemsSource="{Binding AircraftsViewModel.Aircrafts}"
-                  SelectedItem="{Binding AircraftsViewModel.SelectedAircraft, Mode=TwoWay}" />
-
+                  SelectedItem="{Binding AircraftsViewModel.SelectedAircraft, Mode=TwoWay}"
+                          DisplayMemberPath="Name"
+                          ItemContainerStyle="{DynamicResource ComboBoxItemStyleAircraft}">
+                    <!--
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="350" />
+                                    <ColumnDefinition Width="100" />
+                                    <ColumnDefinition Width="350" />
+                                    <ColumnDefinition Width="0" />
+                                    <ColumnDefinition Width="0" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Margin="{Binding Margin}"
+                                           Text="{Binding Name}" />
+                                <TextBlock Grid.Column="1"
+                                           Margin="2"
+                                           Text="{Binding SourceType}" />
+                                <TextBlock Grid.Column="2"
+                                           Margin="2"
+                                           Text="{Binding BaseName}" />
+                                <TextBlock Grid.Column="3"
+                                           Margin="2"
+                                           Text="{Binding SourcePath}" />
+                                <TextBlock Grid.Column="4"
+                                           Margin="2"
+                                           Text="{Binding AltSourcePath}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                    -->
+                </ComboBox>
                 <!--
             <TextBox Grid.Row="4" Grid.Column="1"
                      IsEnabled="False"
