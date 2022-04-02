@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MissionChanger", "MissionChanger\MissionChanger.csproj", "{39F6C90E-ACF7-4178-A9D4-3F238FF8C979}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MissionChanger", "MissionChanger\MissionChanger.csproj", "{39F6C90E-ACF7-4178-A9D4-3F238FF8C979}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MissionChanger-DotNet", "MissionChanger-DotNet\MissionChanger-DotNet.csproj", "{79F2E9AF-3443-4138-971C-F38D46A03690}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,20 +17,15 @@ Global
 		{39F6C90E-ACF7-4178-A9D4-3F238FF8C979}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39F6C90E-ACF7-4178-A9D4-3F238FF8C979}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39F6C90E-ACF7-4178-A9D4-3F238FF8C979}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79F2E9AF-3443-4138-971C-F38D46A03690}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79F2E9AF-3443-4138-971C-F38D46A03690}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79F2E9AF-3443-4138-971C-F38D46A03690}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79F2E9AF-3443-4138-971C-F38D46A03690}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FE6CA87C-A3E4-4567-A079-06B8AAD07FBC}
-	EndGlobalSection
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 2
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://kitd.visualstudio.com/
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = MissionChanger\\MissionChanger.csproj
-		SccProjectName1 = MissionChanger
-		SccLocalPath1 = MissionChanger
 	EndGlobalSection
 EndGlobal
