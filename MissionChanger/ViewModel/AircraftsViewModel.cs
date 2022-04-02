@@ -95,6 +95,9 @@ namespace MissionChanger.ViewModel
                             {
                                 string[] s = name.Split(new[] { '\"' }, StringSplitOptions.RemoveEmptyEntries);
 
+                                if (name.Contains ("208B"))
+                                { }
+
                                 if (s.Length > 0)
                                 {
                                     if (s[0].Contains("SDK"))
@@ -108,6 +111,7 @@ namespace MissionChanger.ViewModel
                                     {
                                         AircraftSourceTypeEnum aircraftSourceType = AircraftSourceTypeEnum.Unknown;
                                         string sourcePath = string.Empty;
+                                        string altSourcePath = string.Empty;
                                         string baseName = string.Empty;
                                         int index = -1;
 
@@ -136,9 +140,7 @@ namespace MissionChanger.ViewModel
                                         else
                                         {
                                             sourcePath = @"..\" + Directory.GetParent(f).Name;
-
-                                            string altPath = GetBasePath(f);
-
+                                            altSourcePath = GetBasePath(f);
                                         }
 
 
@@ -160,6 +162,7 @@ namespace MissionChanger.ViewModel
                                             Name = s[0],
                                             BaseName = baseName,
                                             SourcePath = sourcePath,
+                                            AltSourcePath = altSourcePath,
                                             SourceType = aircraftSourceType,
                                         };
 
