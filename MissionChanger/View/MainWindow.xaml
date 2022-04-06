@@ -70,8 +70,8 @@
                                 <ColumnDefinition Width="100" />
                                 <ColumnDefinition Width="90" />
                                 <ColumnDefinition Width="350" />
-                                <ColumnDefinition Width="300" />
-                                <ColumnDefinition Width="300" />
+                                <ColumnDefinition Width="0" />
+                                <ColumnDefinition Width="0" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Margin="{Binding Margin}" Text="{Binding Name}" />
                             <TextBlock Grid.Column="1" Margin="2" Text="{Binding SourceType}" />
