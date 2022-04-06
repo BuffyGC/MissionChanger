@@ -14,11 +14,11 @@ namespace MissionChanger.ViewModel
 {
     public class AircraftsViewModel : BaseViewModel
     {
-        public ObservableCollection<Aircraft> Aircrafts { get => aircrafts; set => SetField(ref aircrafts, value); }
-        private ObservableCollection<Aircraft> aircrafts = new ObservableCollection<Aircraft>();
+        public ObservableCollection<AircraftModel> Aircrafts { get => aircrafts; set => SetField(ref aircrafts, value); }
+        private ObservableCollection<AircraftModel> aircrafts = new ObservableCollection<AircraftModel>();
 
-        public Aircraft SelectedAircraft { get => selectedAircraft; set => SetField(ref selectedAircraft, value); }
-        private Aircraft selectedAircraft;
+        public AircraftModel SelectedAircraft { get => selectedAircraft; set => SetField(ref selectedAircraft, value); }
+        private AircraftModel selectedAircraft;
 
         public AircraftsViewModel()
         {
@@ -27,9 +27,9 @@ namespace MissionChanger.ViewModel
         internal static readonly string CommunityFolder = @"Community\";
         internal static readonly string OfficialFolder = @"Official\";
 
-        private ObservableCollection<Aircraft> InitDefaultAircrafts()
+        private ObservableCollection<AircraftModel> InitDefaultAircrafts()
         {
-            ObservableCollection<Aircraft> aircrafts = new ObservableCollection<Aircraft>();
+            ObservableCollection<AircraftModel> aircrafts = new ObservableCollection<AircraftModel>();
 
             try
             {
@@ -38,8 +38,8 @@ namespace MissionChanger.ViewModel
 
                 using (StringReader sr = new StringReader(xml))
                 {
-                    XmlSerializer xs = new XmlSerializer(typeof(ObservableCollection<Aircraft>), new XmlRootAttribute("BushTripInjector"));
-                    aircrafts = (ObservableCollection<Aircraft>)xs.Deserialize(sr);
+                    XmlSerializer xs = new XmlSerializer(typeof(ObservableCollection<AircraftModel>), new XmlRootAttribute("BushTripInjector"));
+                    aircrafts = (ObservableCollection<AircraftModel>)xs.Deserialize(sr);
                 }
             }
             catch (Exception)
@@ -63,13 +63,14 @@ namespace MissionChanger.ViewModel
             {
                 string[] files1 = Directory.GetFiles(LongFile.GetWin32LongPath(Path.Combine(path, OfficialFolder)), "Aircraft.cfg", SearchOption.AllDirectories);
                 string[] files2 = Directory.GetFiles(LongFile.GetWin32LongPath(Path.Combine(path, CommunityFolder)), "Aircraft.cfg", SearchOption.AllDirectories);
+                string[] fs_basepathes = Directory.GetDirectories(LongFile.GetWin32LongPath(Path.Combine(path, OfficialFolder)), "fs-base", SearchOption.AllDirectories);
 
                 string[] files = files1.Concat(files2).ToArray();
 
                 int i = 0;
 
-                List<Aircraft> AircraftList = Aircrafts.ToList();
-                List<Aircraft> tempAircrafts = new List<Aircraft>();
+                List<AircraftModel> AircraftList = Aircrafts.ToList();
+                List<AircraftModel> tempAircrafts = new List<AircraftModel>();
 
                 foreach (string f in files)
                 {
@@ -105,7 +106,7 @@ namespace MissionChanger.ViewModel
 
                                     }
 
-                                    Aircraft m = Aircrafts.FirstOrDefault(p => p.Name.Equals(s[0], StringComparison.OrdinalIgnoreCase));
+                                    AircraftModel m = Aircrafts.FirstOrDefault(p => p.Name.Equals(s[0], StringComparison.OrdinalIgnoreCase));
 
                                     if (m == null)
                                     {
@@ -119,9 +120,8 @@ namespace MissionChanger.ViewModel
 
                                         if (!string.IsNullOrEmpty(base_container))
                                         {
-                                            Aircraft bm = AircraftList.FirstOrDefault(
+                                            AircraftModel bm = AircraftList.FirstOrDefault(
                                                 p => p.SourcePath.Equals(base_container, StringComparison.OrdinalIgnoreCase)
-                                                  || p.AltSourcePath.Equals(base_container, StringComparison.OrdinalIgnoreCase)
                                             );
 
                                             if (bm != null)
@@ -157,7 +157,7 @@ namespace MissionChanger.ViewModel
                                                 aircraftSourceType = AircraftSourceTypeEnum.Community;
                                         }
 
-                                        Aircraft aircraft = new Aircraft()
+                                        AircraftModel aircraft = new AircraftModel()
                                         {
                                             Name = s[0],
                                             BaseName = baseName,
@@ -172,7 +172,7 @@ namespace MissionChanger.ViewModel
                                         }
                                         else
                                         {
-                                            Aircraft am = AircraftList.FirstOrDefault(a => aircraft.Name.CompareTo(a.Name) < 0);
+                                            AircraftModel am = AircraftList.FirstOrDefault(a => aircraft.Name.CompareTo(a.Name) < 0);
 
                                             if (am != null)
                                                 index = AircraftList.IndexOf(am);
@@ -191,11 +191,11 @@ namespace MissionChanger.ViewModel
 
                 tempAircrafts = tempAircrafts.OrderBy(a => a.BaseName).ThenByDescending(a => a.Name).ToList();
 
-                foreach (Aircraft aircraft in tempAircrafts)
+                foreach (AircraftModel aircraft in tempAircrafts)
                 {
                     int index = -1;
 
-                    Aircraft bm = AircraftList.FirstOrDefault(a => a.Name.Equals(aircraft.BaseName));
+                    AircraftModel bm = AircraftList.FirstOrDefault(a => a.Name.Equals(aircraft.BaseName));
 
                     if (bm != null)
                         index = AircraftList.IndexOf(bm);
@@ -208,7 +208,40 @@ namespace MissionChanger.ViewModel
 
                 tempAircrafts.Clear();
 
-                Aircrafts = new ObservableCollection<Aircraft>(AircraftList);
+                if (fs_basepathes.Length > 0)
+                {
+                    string fs_base_path = fs_basepathes[0].Replace("fs-base", "");
+
+                    foreach (AircraftModel ai in AircraftList.Where(a => !string.IsNullOrEmpty(a.AltSourcePath)))
+                    {
+                        if (LongFile.Exists(Path.Combine(fs_base_path, ai.AltSourcePath, "manifest.json")))
+                            ai.AircraftInstalled = AircraftInstallEnum.Installed;
+                        else
+                            ai.AircraftInstalled = AircraftInstallEnum.NotInstalled;
+                    }
+                    foreach (AircraftModel ai in AircraftList.Where(a => string.IsNullOrEmpty(a.AltSourcePath)))
+                    {
+                        AircraftModel baseModel = AircraftList.Where(a => a.Name.Equals(ai.BaseName, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                        if (baseModel != null)
+                        {
+                            if (baseModel.AircraftInstalled == AircraftInstallEnum.Installed)
+                                ai.AircraftInstalled = AircraftInstallEnum.Installed;
+                            else
+                            {
+                                if (ai.SourceType == AircraftSourceTypeEnum.Community)
+                                    ai.AircraftInstalled = AircraftInstallEnum.BaseNotInst;
+                                else
+                                    ai.AircraftInstalled = AircraftInstallEnum.NotInstalled;
+                            }
+                        }
+                        else
+                            ai.AircraftInstalled = AircraftInstallEnum.BaseNotInst;
+                    }
+
+                    Aircrafts = new ObservableCollection<AircraftModel>(AircraftList.Where(a => a.AircraftInstalled == AircraftInstallEnum.Installed));
+                }
+                else
+                    Aircrafts = new ObservableCollection<AircraftModel>(AircraftList);
             }
         }
 

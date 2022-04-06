@@ -68,15 +68,17 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="350" />
                                 <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="90" />
                                 <ColumnDefinition Width="350" />
-                                <ColumnDefinition Width="0" />
-                                <ColumnDefinition Width="0" />
+                                <ColumnDefinition Width="300" />
+                                <ColumnDefinition Width="300" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Margin="{Binding Margin}" Text="{Binding Name}" />
                             <TextBlock Grid.Column="1" Margin="2" Text="{Binding SourceType}" />
-                            <TextBlock Grid.Column="2" Margin="2" Text="{Binding BaseName}" />
-                            <TextBlock Grid.Column="3" Margin="2" Text="{Binding SourcePath}" />
-                            <TextBlock Grid.Column="4" Margin="2" Text="{Binding AltSourcePath}" />
+                            <TextBlock Grid.Column="2" Margin="2" Text="{Binding AircraftInstalled}" />
+                            <TextBlock Grid.Column="3" Margin="2" Text="{Binding BaseName}" />
+                            <TextBlock Grid.Column="4" Margin="2" Text="{Binding SourcePath}" />
+                            <TextBlock Grid.Column="5" Margin="2" Text="{Binding AltSourcePath}" />
 
                         </Grid>
                         <ControlTemplate.Triggers>

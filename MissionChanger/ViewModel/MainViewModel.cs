@@ -101,7 +101,7 @@ namespace MissionChanger.ViewModel
         {
             if (e.PropertyName == nameof(MissionViewModel.SelectedMission) && MissionViewModel.SelectedMission != null)
             {
-                Aircraft aircraft = AircraftsViewModel.Aircrafts.FirstOrDefault(a => a.Name.Equals(MissionViewModel.SelectedMission.Aircraft, StringComparison.OrdinalIgnoreCase));
+                AircraftModel aircraft = AircraftsViewModel.Aircrafts.FirstOrDefault(a => a.Name.Equals(MissionViewModel.SelectedMission.Aircraft, StringComparison.OrdinalIgnoreCase));
 
                 //if (aircraft != null)
                     AircraftsViewModel.SelectedAircraft = aircraft;

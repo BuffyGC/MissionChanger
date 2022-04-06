@@ -14,8 +14,16 @@ namespace MissionChanger.Model
         Payware,
     }
 
-    [XmlType(TypeName = "AircraftModel")]
-    public class Aircraft : BaseModel
+    public enum AircraftInstallEnum
+    {
+        Unknown,
+        Installed,
+        NotInstalled,
+        BaseNotInst,
+    }
+
+
+    public class AircraftModel : BaseModel
     {
         [XmlAttribute]
         public string Name { get => name; set => SetField(ref name, value); }
@@ -42,6 +50,10 @@ namespace MissionChanger.Model
         [XmlAttribute]
         public AircraftSourceTypeEnum SourceType { get => sourceType; set => SetField(ref sourceType, value); }
         private AircraftSourceTypeEnum sourceType = AircraftSourceTypeEnum.Unknown;
+
+        [XmlIgnore]
+        public AircraftInstallEnum AircraftInstalled { get => aircraftInstalled; set => SetField(ref aircraftInstalled, value); }
+        private AircraftInstallEnum aircraftInstalled = AircraftInstallEnum.Unknown;
 
 
         public override string ToString()
