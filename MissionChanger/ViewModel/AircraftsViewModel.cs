@@ -214,7 +214,8 @@ namespace MissionChanger.ViewModel
 
                     foreach (AircraftModel ai in AircraftList.Where(a => !string.IsNullOrEmpty(a.AltSourcePath)))
                     {
-                        if (LongFile.Exists(Path.Combine(fs_base_path, ai.AltSourcePath, "manifest.json")))
+                        if (LongFile.Exists(Path.Combine(fs_base_path, ai.AltSourcePath, "manifest.json")) ||
+                            LongFile.Exists(Path.Combine(path, CommunityFolder, ai.AltSourcePath, "manifest.json")))
                             ai.AircraftInstalled = AircraftInstallEnum.Installed;
                         else
                             ai.AircraftInstalled = AircraftInstallEnum.NotInstalled;
