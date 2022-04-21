@@ -240,6 +240,7 @@ namespace MissionChanger.ViewModel
                     }
 
                     Aircrafts = new ObservableCollection<AircraftModel>(AircraftList.Where(a => a.AircraftInstalled == AircraftInstallEnum.Installed));
+                    //Aircrafts = new ObservableCollection<AircraftModel>(AircraftList);
                 }
                 else
                     Aircrafts = new ObservableCollection<AircraftModel>(AircraftList);

@@ -260,6 +260,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="100"/>
@@ -373,18 +375,24 @@
                 <TextBox Grid.Row="10" Grid.Column="1" 
                      Text="{Binding MissionViewModel.SelectedMission.WeatherPresetFile}" />
 
-                <Label Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="2"
+                <Label Grid.Row="11" Grid.Column="0"
+                   Content="Multiplayer"/>
+                <CheckBox Grid.Row="11" Grid.Column="1"
+                      Content="Enabled"
+                      IsChecked="{Binding MissionViewModel.SelectedMission.MultiPlayer}" Height="20"/>
+                
+                <Label Grid.Row="12" Grid.Column="0" Grid.ColumnSpan="2"
                        Content="This file is protected. Any change can hide it in the sim."
                        Foreground="Red"
                        FontWeight="Bold"
                        Visibility="{Binding MissionViewModel.SelectedMission.IsProtected, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Center"/>
 
-                <Button Grid.Row="12" Grid.Column="1" 
+                <Button Grid.Row="13" Grid.Column="1" 
                         Content="Restore Original File" Margin="50,3,50,3" 
                         Command="{Binding MissionViewModel.CommandRestoreOriginal}"
                         IsEnabled="{Binding MissionViewModel.SelectedMission.HasBackup}"/>
 
-                <Button Grid.Row="12" Grid.Column="1"
+                <Button Grid.Row="14" Grid.Column="1"
                     Content="Restore corrupt GPS and Flightplan" 
                     IsEnabled="False"
                     Visibility="Collapsed"/>

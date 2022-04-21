@@ -74,6 +74,10 @@ namespace MissionChanger.Model
         public bool HasWeatherFile { get => hasWeatherFile; set => SetField(ref hasWeatherFile, value); }
         private bool hasWeatherFile = false;
 
+        public bool MultiPlayer { get => multiPlayer; set => SetField(ref multiPlayer, value); }
+        private bool multiPlayer = false;
+
+
         public bool HasBackup { get => hasBackup; set => SetField(ref hasBackup, value); }
         private bool hasBackup = false;
 

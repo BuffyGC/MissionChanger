@@ -67,10 +67,8 @@ namespace MissionChanger.ViewModel
 
                 INI INI = new INI(fltFile);
 
-                mission.Aircraft = INI.Read("Sim", "Sim.0");
-                mission.DateTime = ReadDateTime(INI);
+                ReadFLT(INI, mission);
 
-                ReadWeather(INI, mission);
                 mission.OriginalAircraft = mission.Aircraft;
                 mission.HasBackup = false;
                 mission.IsChanged = false;
@@ -103,11 +101,9 @@ namespace MissionChanger.ViewModel
                         mission.HasWeatherFile = LongFile.Exists(Path.Combine(Path.GetDirectoryName(fltFile), "Weather.WPR"));
 
                         mission.Title = mission.Manifest != null ? $"{mission.Manifest.title} ({mission.Name})" : mission.Name;
-                        mission.Aircraft = INI.Read("Sim", "Sim.0");
                         mission.Filename = LongFile.RemoveWin32LongPath(fltFile);
-                        mission.DateTime = ReadDateTime(INI);
 
-                        ReadWeather(INI, mission);
+                        ReadFLT(INI, mission);
 
                         string backupname = GetBackupFilename(fltFile);
 
@@ -257,13 +253,11 @@ namespace MissionChanger.ViewModel
                                 savedMission.MissionType = INI.Read("MissionType", "Main");
                                 savedMission.Name = name;    // TODO
                                 savedMission.Title = name;
-                                savedMission.Aircraft = INI.Read("Sim", "Sim.0");
                                 savedMission.Filename = LongFile.RemoveWin32LongPath(fltFile);
-                                savedMission.DateTime = ReadDateTime(INI);
 
                                 savedMission.LostGPS = !INI.KeyExists("WpInfo0", "GPS_Engine");
 
-                                ReadWeather(INI, savedMission);
+                                ReadFLT(INI, savedMission);
 
                                 string backupname = GetBackupFilename(fltFile);
 
@@ -291,6 +285,15 @@ namespace MissionChanger.ViewModel
             catch (Exception)
             {
             }
+        }
+
+        private void ReadFLT(INI INI, Mission mission)
+        {
+            mission.Aircraft = INI.Read("Sim", "Sim.0");
+
+            ReadWeather(INI, mission);
+            mission.DateTime = ReadDateTime(INI);
+            mission.MultiPlayer = INI.ReadDefault(0, "Status", "MultiPlayer") > 0;
         }
 
         private void ReadWeather(INI INI, Mission mission)
@@ -392,6 +395,8 @@ namespace MissionChanger.ViewModel
                     INI.Write("WeatherCanBeLive", false, "Weather");
                 }
 
+                INI.Write("Status", mission.MultiPlayer ? "1" : "0", "Multiplayer");
+
                 if (mission.Manifest?.total_package_size?.Length > 0)
                 {
                     string backupName = GetBackupFilename(mission.ManifestFile);
@@ -431,7 +436,7 @@ namespace MissionChanger.ViewModel
                 LongFile.SetCreationTime(selectedMission.Filename, creationDateTime);
                 LongFile.SetLastWriteTime(selectedMission.Filename, lastWriteDateTime);
 
-                ReadWeather(INI, mission);
+                ReadFLT(INI, mission);
 
                 mission.IsChanged = false;
             }
