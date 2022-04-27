@@ -85,45 +85,48 @@ namespace MissionChanger.ViewModel
 
                 foreach (string fltFile in fltFiles)
                 {
-                    INI INI = new INI(fltFile);
-
-                    Mission mission = new Mission();
-                    mission.MissionType = INI.Read("MissionType", "Main");
-
-                    if (mission.MissionType.Equals("BushTrip", StringComparison.OrdinalIgnoreCase))
+                    if (!(fltFile.ToLower().Contains("official") && fltFile.ToLower().Contains("template")))
                     {
-                        mission.Name = Path.GetFileNameWithoutExtension(fltFile);
+                        INI INI = new INI(fltFile);
 
-                        mission.ManifestFile = GetManifestFile(fltFile);
-                        mission.Manifest = GetManifest(mission.ManifestFile);
-                        mission.IsProtected = mission.Manifest.total_package_size?.Length > 0;
+                        Mission mission = new Mission();
+                        mission.MissionType = INI.Read("MissionType", "Main");
 
-                        mission.HasWeatherFile = LongFile.Exists(Path.Combine(Path.GetDirectoryName(fltFile), "Weather.WPR"));
-
-                        mission.Title = mission.Manifest != null ? $"{mission.Manifest.title} ({mission.Name})" : mission.Name;
-                        mission.Filename = LongFile.RemoveWin32LongPath(fltFile);
-
-                        ReadFLT(INI, mission);
-
-                        string backupname = GetBackupFilename(fltFile);
-
-                        if (LongFile.Exists(backupname))
+                        if (mission.MissionType.Equals("BushTrip", StringComparison.OrdinalIgnoreCase))
                         {
-                            mission.OriginalAircraft = new INI(backupname).Read("Sim", "Sim.0");
-                            mission.HasBackup = true;
-                        }
-                        else
-                        {
-                            mission.OriginalAircraft = mission.Aircraft;
-                            mission.HasBackup = false;
-                        }
+                            mission.Name = Path.GetFileNameWithoutExtension(fltFile);
 
-                        AddSavedMissions(mission);
+                            mission.ManifestFile = GetManifestFile(fltFile);
+                            mission.Manifest = GetManifest(mission.ManifestFile);
+                            mission.IsProtected = mission.Manifest.total_package_size?.Length > 0;
 
-                        if (!string.IsNullOrWhiteSpace(mission.MissionType) && !string.IsNullOrWhiteSpace(mission.Aircraft))
-                        {
-                            mission.PropertyChanged += Mission_PropertyChanged;
-                            Missions.Add(mission);
+                            mission.HasWeatherFile = LongFile.Exists(Path.Combine(Path.GetDirectoryName(fltFile), "Weather.WPR"));
+
+                            mission.Title = mission.Manifest != null ? $"{mission.Manifest.title} ({mission.Name})" : mission.Name;
+                            mission.Filename = LongFile.RemoveWin32LongPath(fltFile);
+
+                            ReadFLT(INI, mission);
+
+                            string backupname = GetBackupFilename(fltFile);
+
+                            if (LongFile.Exists(backupname))
+                            {
+                                mission.OriginalAircraft = new INI(backupname).Read("Sim", "Sim.0");
+                                mission.HasBackup = true;
+                            }
+                            else
+                            {
+                                mission.OriginalAircraft = mission.Aircraft;
+                                mission.HasBackup = false;
+                            }
+
+                            AddSavedMissions(mission);
+
+                            if (!string.IsNullOrWhiteSpace(mission.MissionType) && !string.IsNullOrWhiteSpace(mission.Aircraft))
+                            {
+                                mission.PropertyChanged += Mission_PropertyChanged;
+                                Missions.Add(mission);
+                            }
                         }
                     }
                 }
