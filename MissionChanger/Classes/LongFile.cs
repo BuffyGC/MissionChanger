@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,12 +19,26 @@ namespace MissionChanger.Classes
             return System.IO.File.Exists(path);
         }
 
-        internal static void Delete(string path)
+        internal static bool ExistsInFolder(string path, string searchPattern)
         {
             if (path.Length >= MAX_PATH)
                 path = GetWin32LongPath(path);
 
+            return System.IO.Directory.EnumerateFiles(path, searchPattern).Any();
+        }
+
+        internal static void Delete(string path)
+        {
+            if (path.Length >= MAX_PATH)
+                path = GetWin32LongPath(path);
+            
             System.IO.File.Delete(path);
+        }
+
+        internal static void DeleteIfExists(string path)
+        {
+            if (LongFile.Exists(path))
+                LongFile.Delete(path);
         }
 
         internal static void Copy(string sourceFileName, string destFileName)
@@ -52,6 +68,20 @@ namespace MissionChanger.Classes
             System.IO.File.Move(sourceFileName, destFileName);
         }
 
+        internal static void Move(string sourceFileName, string destFileName, bool overwrite)
+        {
+            if (sourceFileName.Length >= MAX_PATH)
+                sourceFileName = GetWin32LongPath(sourceFileName);
+
+            if (destFileName.Length >= MAX_PATH)
+                destFileName = GetWin32LongPath(destFileName);
+
+            if (overwrite && Exists(destFileName))
+                Delete(destFileName);
+
+            System.IO.File.Move(sourceFileName, destFileName);
+        }
+
         internal static byte[] ReadAllBytes(string path)
         {
             if (path.Length >= MAX_PATH)
@@ -65,7 +95,10 @@ namespace MissionChanger.Classes
             if (path.Length >= MAX_PATH)
                 path = GetWin32LongPath(path);
 
-            return System.IO.File.ReadAllLines(path);
+            if (Exists(path))
+                return System.IO.File.ReadAllLines(path);
+
+            return new string[0];
         }
 
         internal static string ReadAllText(string path)
@@ -164,10 +197,14 @@ namespace MissionChanger.Classes
         internal static string RemoveWin32LongPath(string path)
         {
             if (path.StartsWith(@"\\?\UNC\"))
-                path = path.Remove(0, 8);
+            {
+                path = @"\\" + path.Substring(8);
+            }
             else
             if (path.StartsWith(@"\\?\"))
-                path = path.Remove(0, 4);
+            {
+                path = path.Substring(4);
+            }
 
             return path;
         }
@@ -177,7 +214,8 @@ namespace MissionChanger.Classes
             if (check && path.Length < MAX_PATH)
                 return path;
 
-            if (path.StartsWith(@"\\?\")) return path;
+            if (path.StartsWith(@"\\?\"))
+                return path;
 
             if (path.StartsWith("\\"))
             {
@@ -194,7 +232,8 @@ namespace MissionChanger.Classes
                 while (path.Contains("\\.\\")) path = path.Replace("\\.\\", "\\");
                 path = @"\\?\" + path;
             }
-            return path.TrimEnd('.'); 
+
+            return path.TrimEnd('.');
         }
 
         private static string Combine(string path1, string path2)
@@ -229,5 +268,223 @@ namespace MissionChanger.Classes
             return string.Empty;
         }
 
+
+        internal static bool DirectoryExists(string path)
+        {
+            if (path.Length >= MAX_PATH)
+                path = GetWin32LongPath(path);
+
+            return System.IO.Directory.Exists(path);
+        }
+
+        internal static bool DirectoryIsEmpty(string path)
+        {
+            if (!DirectoryExists(path))
+                return true;
+
+            if (path.Length >= MAX_PATH)
+                path = GetWin32LongPath(path);
+
+            System.IO.DirectoryInfo di = new System.IO.DirectoryInfo(path);
+
+            var dirs = di.EnumerateDirectories("*", System.IO.SearchOption.AllDirectories);
+
+            if (dirs.Any())
+                return false;
+
+            var files = di.EnumerateFiles("*", System.IO.SearchOption.AllDirectories);
+
+            if (files.Any())
+                return false;
+
+            return true;
+        }
+
+
+        internal static System.IO.DirectoryInfo CreateDirectory(string path)
+        {
+            if (path.Length >= MAX_PATH)
+                path = GetWin32LongPath(path);
+
+            return System.IO.Directory.CreateDirectory(path);
+        }
+
+
+        internal static void DeleteDirectory(string path)
+        {
+            if (path.Length >= MAX_PATH)
+                path = GetWin32LongPath(path);
+
+            System.IO.Directory.Delete(path);
+        }
+
+        internal static void DeleteDirectory(string path, bool recursive)
+        {
+            if (path.Length >= MAX_PATH)
+                path = GetWin32LongPath(path);
+
+            System.IO.Directory.Delete(path, recursive);
+        }
+
+        internal static void ForceDeleteDirectory(string path)
+        {
+            if (path.Length >= MAX_PATH)
+                path = GetWin32LongPath(path);
+
+            if (!System.IO.Directory.Exists(path))
+                return;
+
+            string [] filenames = System.IO.Directory.GetFiles(path);
+
+            foreach (string filename in filenames)
+            {
+                try
+                {
+                    string longFileName = GetWin32LongPath(filename);
+                    //Logger.WriteFile(MethodBase.GetCurrentMethod(), "ToDelete: ", longFileName, 1);
+
+                    System.IO.File.SetAttributes(longFileName, System.IO.FileAttributes.Normal);
+                    LongFile.Delete(longFileName);
+                }
+                catch(Exception )
+                {
+                    //Logger.WriteException(MethodBase.GetCurrentMethod(), "Error deleting file:", ex, 0);
+                    //Logger.WriteFile(MethodBase.GetCurrentMethod(), "Error deleting file:", GetWin32LongPath(filename, true), 0);
+                }
+            }
+
+            string[] directories = System.IO.Directory.GetDirectories(path);
+
+            foreach (string directory in directories)
+            {
+                ForceDeleteDirectory(directory);
+            }
+
+            System.IO.Directory.Delete(path, true);
+        }
+
+        internal static void RemoveEmptyDirectories(string path, bool inclTopLevelFolder = false)
+        {
+            if (path.Length >= MAX_PATH)
+                path = GetWin32LongPath(path);
+
+            if (!System.IO.Directory.Exists(path))
+                return;
+
+            var fi = System.IO.Directory.EnumerateFiles(path);
+
+            if (! fi.Any())
+            {
+                string[] directories = System.IO.Directory.GetDirectories(path);
+
+                foreach (string directory in directories)
+                {
+                    RemoveEmptyDirectories(directory, true);
+                }
+            }
+
+            if (inclTopLevelFolder)
+            {
+                if (!fi.Any())
+                {
+                    var di = System.IO.Directory.EnumerateDirectories(path);
+
+                    if (!di.Any())
+                        System.IO.Directory.Delete(path);
+                }
+            }
+        }
+
+        internal static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs, bool overwrite = false)
+        {
+            sourceDirName = LongFile.GetWin32LongPath(sourceDirName);
+            destDirName = LongFile.GetWin32LongPath(destDirName);
+
+            // Get the subdirectories for the specified directory.
+            System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(sourceDirName);
+
+            if (!dir.Exists)
+            {
+                throw new System.IO.DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + sourceDirName);
+            }
+
+            // If the destination directory doesn't exist, create it.       
+            System.IO.Directory.CreateDirectory(destDirName);
+
+
+            // Get the files in the directory and copy them to the new location.
+            string[] files = System.IO.Directory.GetFiles(sourceDirName);
+
+            foreach (string file in files)
+            {
+                string destFile = System.IO.Path.Combine(destDirName, System.IO.Path.GetFileName(file));
+
+                if (LongFile.Exists(destFile))
+                    LongFile.Delete(destFile);
+
+                LongFile.Copy(file, destFile, overwrite);
+            }
+
+            // If copying subdirectories, copy them and their contents to new location.
+            if (copySubDirs)
+            {
+                string[] dirs = System.IO.Directory.GetDirectories(sourceDirName);
+
+                foreach (string subdir in dirs)
+                {
+                    System.IO.DirectoryInfo di = new System.IO.DirectoryInfo(subdir);
+                    string destPath = System.IO.Path.Combine(destDirName, di.Name);
+                    DirectoryCopy(subdir, destPath, copySubDirs, overwrite);
+                }
+            }
+        }
+
+
+        internal static void DirectoryMove(string sourceDirName, string destDirName, bool overwrite = false, bool removeTopLevelFolder = false)
+        {
+            sourceDirName = LongFile.GetWin32LongPath(sourceDirName);
+            destDirName = LongFile.GetWin32LongPath(destDirName);
+
+            // Get the subdirectories for the specified directory.
+            System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(sourceDirName);
+
+            if (!dir.Exists)
+            {
+                throw new System.IO.DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + sourceDirName);
+            }
+
+            // If the destination directory doesn't exist, create it.       
+            System.IO.Directory.CreateDirectory(destDirName);
+
+
+            // Get the files in the directory and copy them to the new location.
+            string[] files = System.IO.Directory.GetFiles(sourceDirName);
+
+            foreach (string file in files)
+            {
+                string destFile = System.IO.Path.Combine(destDirName, System.IO.Path.GetFileName(file));
+
+                if (overwrite && LongFile.Exists(destFile))
+                    LongFile.Delete(destFile);
+
+                LongFile.Move(file, destFile, overwrite);
+            }
+
+            string[] dirs = System.IO.Directory.GetDirectories(sourceDirName);
+
+            foreach (string subdir in dirs)
+            {
+                System.IO.DirectoryInfo di = new System.IO.DirectoryInfo(subdir);
+                string destPath = System.IO.Path.Combine(destDirName, di.Name);
+                DirectoryMove(subdir, destPath, overwrite, true);
+            }
+
+            if (removeTopLevelFolder)
+                System.IO.Directory.Delete(sourceDirName);
+        }
     }
 }

@@ -77,6 +77,16 @@ namespace MissionChanger.Model
         public bool MultiPlayer { get => multiPlayer; set => SetField(ref multiPlayer, value); }
         private bool multiPlayer = false;
 
+        public bool IsOnGround { get => isOnGround; set => SetField(ref isOnGround, value); }
+        private bool isOnGround = false;
+
+        public double Altitude { get => altitude; set => SetField(ref altitude, value); }
+        private double altitude = double.NaN;
+        public double Pitch { get => pitch; set => SetField(ref pitch, value); }
+        private double pitch = double.NaN;
+        public double Bank { get => bank; set => SetField(ref bank, value); }
+        private double bank = double.NaN;
+
 
         public bool HasBackup { get => hasBackup; set => SetField(ref hasBackup, value); }
         private bool hasBackup = false;
@@ -90,6 +100,8 @@ namespace MissionChanger.Model
         public List<Mission> SavedMissions { get => savedMissions; set => SetField(ref savedMissions, value); }
         private List<Mission> savedMissions = new List<Mission>();
 
-        
-   }
+        public bool IsSavedMission { get => isSavedMission; set => SetField(ref isSavedMission, value); }
+        private bool isSavedMission = false;
+
+    }
 }

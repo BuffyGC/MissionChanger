@@ -262,6 +262,10 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="100"/>
@@ -380,19 +384,68 @@
                 <CheckBox Grid.Row="11" Grid.Column="1"
                       Content="Enabled"
                       IsChecked="{Binding MissionViewModel.SelectedMission.MultiPlayer}" Height="20"/>
-                
-                <Label Grid.Row="12" Grid.Column="0" Grid.ColumnSpan="2"
+
+                <Label Grid.Row="11" Grid.Column="0"
+                   Content="Multiplayer"/>
+                <CheckBox Grid.Row="11" Grid.Column="1"
+                      Content="Enabled"
+                      IsChecked="{Binding MissionViewModel.SelectedMission.MultiPlayer}" Height="20"/>
+
+                <Label Grid.Row="12" Grid.Column="0"
+                       Content="IsOnGround"
+                       Visibility="{Binding MissionViewModel.SelectedMission.IsSavedMission, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <CheckBox Grid.Row="12" Grid.Column="1"
+                          Content="On Ground"
+                          IsChecked="{Binding MissionViewModel.SelectedMission.IsOnGround}" Height="20"
+                          Visibility="{Binding MissionViewModel.SelectedMission.IsSavedMission, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                <Label Grid.Row="13" Grid.Column="0"
+                       Content="Altitude"
+                       Visibility="{Binding MissionViewModel.SelectedMission.IsSavedMission, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <Grid Grid.Row="13" Grid.Column="1"
+                      Visibility="{Binding MissionViewModel.SelectedMission.IsSavedMission, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                         Text="{Binding MissionViewModel.SelectedMission.Altitude}" 
+                         Visibility="{Binding MissionViewModel.SelectedMission.IsSavedMission, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <Button Grid.Column="1" 
+                            Content="Add 1000 ft" Width="120" 
+                            Command="{Binding MissionViewModel.CommandAdd1000}"/>
+                </Grid>
+
+                <Label Grid.Row="14" Grid.Column="0"
+                       Content="Pitch / Bank"
+                       Visibility="{Binding MissionViewModel.SelectedMission.IsSavedMission, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <Grid Grid.Row="14" Grid.Column="1"
+                      Visibility="{Binding MissionViewModel.SelectedMission.IsSavedMission, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                         Text="{Binding MissionViewModel.SelectedMission.Pitch}" 
+                         Visibility="{Binding MissionViewModel.SelectedMission.IsSavedMission, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <TextBox Grid.Column="1"
+                         Text="{Binding MissionViewModel.SelectedMission.Bank}" 
+                         Visibility="{Binding MissionViewModel.SelectedMission.IsSavedMission, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                </Grid>
+
+
+                <Label Grid.Row="15" Grid.Column="0" Grid.ColumnSpan="2"
                        Content="This file is protected. Any change can hide it in the sim."
                        Foreground="Red"
                        FontWeight="Bold"
                        Visibility="{Binding MissionViewModel.SelectedMission.IsProtected, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Center"/>
 
-                <Button Grid.Row="13" Grid.Column="1" 
+                <Button Grid.Row="16" Grid.Column="1" 
                         Content="Restore Original File" Margin="50,3,50,3" 
                         Command="{Binding MissionViewModel.CommandRestoreOriginal}"
                         IsEnabled="{Binding MissionViewModel.SelectedMission.HasBackup}"/>
 
-                <Button Grid.Row="14" Grid.Column="1"
+                <Button Grid.Row="17" Grid.Column="1"
                     Content="Restore corrupt GPS and Flightplan" 
                     IsEnabled="False"
                     Visibility="Collapsed"/>

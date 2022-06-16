@@ -3,6 +3,7 @@ using MissionChanger.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -25,21 +26,28 @@ namespace MissionChanger.ViewModel
         public RelayCommand<Mission> SelectedItemChanged { get; private set; } = null;
         public RelayCommand CommandRestoreOriginal { get; private set; } = null;
 
+        public RelayCommand CommandAdd1000 { get; private set; } = null;
+
 
         public MissionViewModel()
         {
             SelectedItemChanged = new RelayCommand<Mission>( c => SelectedMission = c );
 
             CommandRestoreOriginal = new RelayCommand(OnRestoreOriginal);
+
+            CommandAdd1000 = new RelayCommand(OnAdd1000);
         }
 
-        private void OnRestoreOriginal(object obj)
+        private void OnAdd1000(object obj)
         {
             try
             {
                 if (SelectedMission != null)
                 {
-                    RestoreOriginal(SelectedMission);
+                    if (double.IsNaN(SelectedMission.Altitude))
+                        SelectedMission.Altitude = 0;
+
+                    SelectedMission.Altitude += 1000;
                 }
             }
             catch (Exception)
@@ -47,14 +55,37 @@ namespace MissionChanger.ViewModel
             }
         }
 
+
+        private void OnRestoreOriginal(object obj)
+        {
+            try
+            {
+                if (SelectedMission != null)
+                {
+                    SelectedMission.PropertyChanged -= Mission_PropertyChanged;
+                    RestoreOriginal(SelectedMission);
+                    SelectedMission.PropertyChanged += Mission_PropertyChanged;
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+
         private void RestoreOriginal(Mission mission)
         {
-            string backupname = GetBackupFilename(mission.ManifestFile);
+            string backupname = string.Empty;
 
-            if (LongFile.Exists(backupname))
+            if (mission.ManifestFile != null)
             {
-                LongFile.Copy(backupname, mission.ManifestFile, true);
-                LongFile.Delete(backupname);
+                backupname = GetBackupFilename(mission.ManifestFile);
+
+                if (LongFile.Exists(backupname))
+                {
+                    LongFile.Copy(backupname, mission.ManifestFile, true);
+                    LongFile.Delete(backupname);
+                }
             }
 
             backupname = GetBackupFilename(mission.Filename);
@@ -144,6 +175,10 @@ namespace MissionChanger.ViewModel
         {
             if (! e.PropertyName.Equals(nameof(Mission.IsChanged)))
                 (sender as Mission).IsChanged = true;
+
+            if (e.PropertyName.Equals(nameof(Mission.Altitude)))
+                (sender as Mission).IsOnGround = false;
+
         }
 
 
@@ -250,6 +285,7 @@ namespace MissionChanger.ViewModel
                                 name = name.Replace("\\", string.Empty);
 
                                 Mission savedMission = new Mission();
+                                savedMission.IsSavedMission = true;
                                 savedMission.IsProtected = theMission.IsProtected;
                                 savedMission.HasWeatherFile = theMission.HasWeatherFile;
 
@@ -297,6 +333,11 @@ namespace MissionChanger.ViewModel
             ReadWeather(INI, mission);
             mission.DateTime = ReadDateTime(INI);
             mission.MultiPlayer = INI.ReadDefault(0, "Status", "MultiPlayer") > 0;
+
+            mission.IsOnGround = INI.ReadDefault(false, "SimOnGround", "SimVars.0");
+            mission.Altitude = INI.ReadDefault(double.NaN, "Altitude", "SimVars.0");
+            mission.Pitch = INI.ReadDefault(double.NaN, "Pitch", "SimVars.0");
+            mission.Bank = INI.ReadDefault(double.NaN, "Bank", "SimVars.0");
         }
 
         private void ReadWeather(INI INI, Mission mission)
@@ -434,6 +475,20 @@ namespace MissionChanger.ViewModel
                         LongFile.SetCreationTime(mission.ManifestFile, creationDateTimeManifest);
                         LongFile.SetLastWriteTime(mission.ManifestFile, lastWriteDateTimeManifest);
                     }
+                }
+
+                if (mission.IsSavedMission)
+                {
+                    INI.Write("SimOnGround", mission.IsOnGround, "SimVars.0");
+
+                    if (!double.IsNaN(mission.Altitude))
+                        INI.Write("Altitude", string.Format(CultureInfo.InvariantCulture, "{0:+000000.00;-000000.00}", mission.Altitude), "SimVars.0");
+
+                    if (!double.IsNaN(mission.Pitch))
+                        INI.Write("Pitch", string.Format(CultureInfo.InvariantCulture, "{0}", mission.Pitch), "SimVars.0");
+
+                    if (!double.IsNaN(mission.Bank))
+                        INI.Write("Bank", string.Format(CultureInfo.InvariantCulture, "{0}", mission.Bank), "SimVars.0");
                 }
 
                 LongFile.SetCreationTime(selectedMission.Filename, creationDateTime);
