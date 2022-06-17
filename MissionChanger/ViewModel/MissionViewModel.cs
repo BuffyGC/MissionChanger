@@ -400,14 +400,14 @@ namespace MissionChanger.ViewModel
                 string backupname = GetBackupFilename(mission.Filename);
 
                 if (!LongFile.Exists(backupname))
-                    LongFile.Copy(selectedMission.Filename, backupname);
+                    LongFile.Copy(mission.Filename, backupname);
 
                 mission.HasBackup = true;
 
-                DateTime creationDateTime = LongFile.GetCreationTime(selectedMission.Filename);
-                DateTime lastWriteDateTime = LongFile.GetLastWriteTime(selectedMission.Filename);
+                DateTime creationDateTime = LongFile.GetCreationTime(mission.Filename);
+                DateTime lastWriteDateTime = LongFile.GetLastWriteTime(mission.Filename);
 
-                INI INI = new INI(LongFile.GetWin32LongPath(selectedMission.Filename));
+                INI INI = new INI(LongFile.GetWin32LongPath(mission.Filename));
                 INI.Write("Sim", mission.Aircraft, "Sim.0");
 
                 INI.Write("Year", mission.DateTime.Year, "DateTimeSeason");
@@ -491,8 +491,8 @@ namespace MissionChanger.ViewModel
                         INI.Write("Bank", string.Format(CultureInfo.InvariantCulture, "{0}", mission.Bank), "SimVars.0");
                 }
 
-                LongFile.SetCreationTime(selectedMission.Filename, creationDateTime);
-                LongFile.SetLastWriteTime(selectedMission.Filename, lastWriteDateTime);
+                LongFile.SetCreationTime(mission.Filename, creationDateTime);
+                LongFile.SetLastWriteTime(mission.Filename, lastWriteDateTime);
 
                 ReadFLT(INI, mission);
 
