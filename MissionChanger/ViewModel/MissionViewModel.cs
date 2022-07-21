@@ -1,15 +1,15 @@
-﻿using MissionChanger.Classes;
-using MissionChanger.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows;
+using System.Windows.Data;
+using MissionChanger.Classes;
+using MissionChanger.Model;
 
 namespace MissionChanger.ViewModel
 {
@@ -17,6 +17,12 @@ namespace MissionChanger.ViewModel
     {
         public ObservableCollection<Mission> Missions { get => missions; set => SetField(ref missions, value); }
         private ObservableCollection<Mission> missions = new ObservableCollection<Mission>();
+
+        public CollectionView MissionsView { get => missionsView; set => SetField(ref missionsView, value); }
+        private CollectionView missionsView;
+
+        public string Filter { get => filter; set { if (SetField(ref filter, value)) RefreshFilter(); } }
+        private string filter;
 
         public Mission SelectedMission { get => selectedMission; set => SetField2(ref selectedMission, value, nameof(IsMissionSelected)); }
         private Mission selectedMission;
@@ -36,6 +42,43 @@ namespace MissionChanger.ViewModel
             CommandRestoreOriginal = new RelayCommand(OnRestoreOriginal);
 
             CommandAdd1000 = new RelayCommand(OnAdd1000);
+        }
+
+        private void SetViewSource()
+        {
+            CollectionViewSource missionsCollectionViewSource = new CollectionViewSource
+            {
+                Source = Missions
+            };
+            MissionsView = (CollectionView)missionsCollectionViewSource.View;
+            MissionsView.Filter = MissionsFilter;
+        }
+
+        private bool MissionsFilter(object obj)
+        {
+            if (obj is Mission mission)
+            {
+                if (string.IsNullOrWhiteSpace(Filter))
+                    return true;
+
+                if (mission.IsChanged)
+                    return true;
+
+                if (mission.Name.ToUpper().Contains(Filter.ToUpper()))
+                    return true;
+
+                if (mission.Title.ToUpper().Contains(Filter.ToUpper()))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private void RefreshFilter()
+        {
+            SetViewSource();
+            if (MissionsView != null)
+                MissionsView.Refresh();
         }
 
         private void OnAdd1000(object obj)
@@ -123,44 +166,60 @@ namespace MissionChanger.ViewModel
                         Mission mission = new Mission();
                         mission.MissionType = INI.Read("MissionType", "Main");
 
+                        if (fltFile.ToLower().Contains(AircraftsViewModel.CommunityFolder.ToLower()))
+                            mission.Sort = 0;
+                        else
+                        if (fltFile.ToLower().Contains(AircraftsViewModel.OfficialFolder.ToLower()))
+                            mission.Sort = 20;
+                        else
+                            mission.Sort = 10;
+
+
                         if (mission.MissionType.Equals("BushTrip", StringComparison.OrdinalIgnoreCase))
                         {
                             mission.Name = Path.GetFileNameWithoutExtension(fltFile);
 
                             mission.ManifestFile = GetManifestFile(fltFile);
-                            mission.Manifest = GetManifest(mission.ManifestFile);
-                            mission.IsProtected = mission.Manifest.total_package_size?.Length > 0;
 
-                            mission.HasWeatherFile = LongFile.Exists(Path.Combine(Path.GetDirectoryName(fltFile), "Weather.WPR"));
-
-                            mission.Title = mission.Manifest != null ? $"{mission.Manifest.title} ({mission.Name})" : mission.Name;
-                            mission.Filename = LongFile.RemoveWin32LongPath(fltFile);
-
-                            ReadFLT(INI, mission);
-
-                            string backupname = GetBackupFilename(fltFile);
-
-                            if (LongFile.Exists(backupname))
+                            if (mission.ManifestFile != null)
                             {
-                                mission.OriginalAircraft = new INI(backupname).Read("Sim", "Sim.0");
-                                mission.HasBackup = true;
-                            }
-                            else
-                            {
-                                mission.OriginalAircraft = mission.Aircraft;
-                                mission.HasBackup = false;
-                            }
+                                mission.Manifest = GetManifest(mission.ManifestFile);
+                                mission.IsProtected = mission.Manifest.total_package_size?.Length > 0;
 
-                            AddSavedMissions(mission);
+                                mission.HasWeatherFile = LongFile.Exists(Path.Combine(Path.GetDirectoryName(fltFile), "Weather.WPR"));
 
-                            if (!string.IsNullOrWhiteSpace(mission.MissionType) && !string.IsNullOrWhiteSpace(mission.Aircraft))
-                            {
-                                mission.PropertyChanged += Mission_PropertyChanged;
-                                Missions.Add(mission);
+                                mission.Title = mission.Manifest != null ? $"{mission.Manifest.title} ({mission.Name})" : mission.Name;
+                                mission.Filename = LongFile.RemoveWin32LongPath(fltFile);
+
+                                ReadFLT(INI, mission);
+
+                                string backupname = GetBackupFilename(fltFile);
+
+                                if (LongFile.Exists(backupname))
+                                {
+                                    mission.OriginalAircraft = new INI(backupname).Read("Sim", "Sim.0");
+                                    mission.HasBackup = true;
+                                }
+                                else
+                                {
+                                    mission.OriginalAircraft = mission.Aircraft;
+                                    mission.HasBackup = false;
+                                }
+
+                                AddSavedMissions(mission);
+
+                                if (!string.IsNullOrWhiteSpace(mission.MissionType) && !string.IsNullOrWhiteSpace(mission.Aircraft))
+                                {
+                                    mission.PropertyChanged += Mission_PropertyChanged;
+                                    Missions.Add(mission);
+                                }
                             }
                         }
                     }
                 }
+
+                Missions = new ObservableCollection<Mission>( Missions.OrderBy(e => e.Sort).ThenBy(e => e.Title));
+                SetViewSource();
             }
             catch (Exception ex)
             {
@@ -170,6 +229,7 @@ namespace MissionChanger.ViewModel
             }
 
         }
+
 
         private void Mission_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {

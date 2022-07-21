@@ -1,14 +1,13 @@
-﻿using MissionChanger.Classes;
-using MissionChanger.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using System.Xml.Serialization;
+using MissionChanger.Classes;
+using MissionChanger.Model;
 
 namespace MissionChanger.ViewModel
 {
@@ -17,15 +16,77 @@ namespace MissionChanger.ViewModel
         public ObservableCollection<AircraftModel> Aircrafts { get => aircrafts; set => SetField(ref aircrafts, value); }
         private ObservableCollection<AircraftModel> aircrafts = new ObservableCollection<AircraftModel>();
 
+        public CollectionView AircraftsView { get => aircraftsView; set => SetField(ref aircraftsView, value); }
+        private CollectionView aircraftsView;
+
+        public string Filter { get => filter; set { if (SetField(ref filter, value)) RefreshFilter(); } }
+        private string filter;
+
         public AircraftModel SelectedAircraft { get => selectedAircraft; set => SetField(ref selectedAircraft, value); }
         private AircraftModel selectedAircraft;
 
+        public bool ShowAll { get => showAll; set => SetField(ref showAll, value); }
+        private bool showAll = false;
+
+
         public AircraftsViewModel()
         {
+            SetViewSource();
         }
 
         internal static readonly string CommunityFolder = @"Community\";
         internal static readonly string OfficialFolder = @"Official\";
+
+        private void SetViewSource()
+        {
+            CollectionViewSource aircraftsCollectionViewSource = new CollectionViewSource
+            {
+                Source = Aircrafts
+            };
+            AircraftsView = (CollectionView)aircraftsCollectionViewSource.View;
+            AircraftsView.Filter = AircraftsFilter;
+        }
+
+        private bool AircraftsFilter(object obj)
+        {
+            if (obj is AircraftModel aircraft)
+            {
+                if (string.IsNullOrWhiteSpace(Filter))
+                    return ShowAll || aircraft.AircraftInstalled == AircraftInstallEnum.Installed;
+
+                if (aircraft == SelectedAircraft)
+                    return true;
+
+                if (aircraft.Name.ToUpper().Contains(Filter.ToUpper()))
+                    return ShowAll || aircraft.AircraftInstalled == AircraftInstallEnum.Installed;
+
+                if (string.IsNullOrEmpty(aircraft.BaseName) || aircraft.BaseName.StartsWith("["))
+                {
+                    var livs = Aircrafts.Where(ac => ac.BaseName.Equals(aircraft.Name, StringComparison.OrdinalIgnoreCase));
+
+                    if (livs != null)
+                    {
+                        foreach (AircraftModel liv in livs)
+                        {
+                            if (liv == SelectedAircraft)
+                                return ShowAll || aircraft.AircraftInstalled == AircraftInstallEnum.Installed;
+
+                            if (liv.Name.ToUpper().Contains(Filter.ToUpper()))
+                                return ShowAll || aircraft.AircraftInstalled == AircraftInstallEnum.Installed;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        internal void RefreshFilter()
+        {
+            // SetViewSource();
+            AircraftsView.Refresh();
+        }
+
 
         private ObservableCollection<AircraftModel> InitDefaultAircrafts()
         {
@@ -61,11 +122,37 @@ namespace MissionChanger.ViewModel
 
             if (Directory.Exists(LongFile.GetWin32LongPath(path)))
             {
-                string[] files1 = Directory.GetFiles(LongFile.GetWin32LongPath(Path.Combine(path, OfficialFolder)), "Aircraft.cfg", SearchOption.AllDirectories);
-                string[] files2 = Directory.GetFiles(LongFile.GetWin32LongPath(Path.Combine(path, CommunityFolder)), "Aircraft.cfg", SearchOption.AllDirectories);
-                string[] fs_basepathes = Directory.GetDirectories(LongFile.GetWin32LongPath(Path.Combine(path, OfficialFolder)), "fs-base", SearchOption.AllDirectories);
+                string baseFolder = CommFolderDetector.GetFSBaseFolder();
 
-                string[] files = files1.Concat(files2).ToArray();
+                string offPath =
+                    LongFile.DirectoryExists(Path.Combine(baseFolder, OfficialFolder))
+                    ? Path.Combine(baseFolder, OfficialFolder)
+                    : Path.Combine(path, OfficialFolder);
+
+                string commPath =
+                    LongFile.DirectoryExists(Path.Combine(baseFolder, CommunityFolder))
+                    ? Path.Combine(baseFolder, CommunityFolder)
+                    : Path.Combine(path, CommunityFolder);
+
+                string[] files1 = LongFile.DirectoryExists(offPath)
+                    ? Directory.GetFiles(LongFile.GetWin32LongPath(offPath), "Aircraft.cfg", SearchOption.AllDirectories)
+                    : new string[0];
+
+                string[] files2 = LongFile.DirectoryExists(commPath)
+                    ? Directory.GetFiles(LongFile.GetWin32LongPath(commPath), "Aircraft.cfg", SearchOption.AllDirectories)
+                    : new string[0];
+
+                string[] files3 = !baseFolder.Equals(path) && LongFile.DirectoryExists(path)
+                    ? Directory.GetFiles(LongFile.GetWin32LongPath(path), "Aircraft.cfg", SearchOption.AllDirectories)
+                    : new string[0];
+
+                string[] fs_basepathes =
+                    LongFile.DirectoryExists(offPath)
+                    ? Directory.GetDirectories(LongFile.GetWin32LongPath(offPath), "fs-base", SearchOption.AllDirectories)
+                    : new string[0];
+
+                string[] files = files1.Concat(files2).Concat(files3).ToArray();
+
 
                 int i = 0;
 
@@ -96,7 +183,7 @@ namespace MissionChanger.ViewModel
                             {
                                 string[] s = name.Split(new[] { '\"' }, StringSplitOptions.RemoveEmptyEntries);
 
-                                if (name.Contains ("208B"))
+                                if (name.ToUpper().Contains("JUST"))
                                 { }
 
                                 if (s.Length > 0)
@@ -144,16 +231,18 @@ namespace MissionChanger.ViewModel
                                         }
 
 
+
+                                        if (f.StartsWith(LongFile.GetWin32LongPath(Path.Combine(path, OfficialFolder)), StringComparison.OrdinalIgnoreCase)
+                                            || f.StartsWith(LongFile.GetWin32LongPath(offPath), StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            if (aircraftSourceType == AircraftSourceTypeEnum.Unknown)
+                                                aircraftSourceType = AircraftSourceTypeEnum.Official;
+                                        }
+                                        else
                                         if (!baseName.StartsWith("["))
                                         {
-
-                                            if (f.StartsWith(LongFile.GetWin32LongPath(Path.Combine(path, OfficialFolder)), StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                if (aircraftSourceType == AircraftSourceTypeEnum.Unknown)
-                                                    aircraftSourceType = AircraftSourceTypeEnum.Official;
-                                            }
-                                            else
-                                            if (f.StartsWith(LongFile.GetWin32LongPath(Path.Combine(path, CommunityFolder)), StringComparison.OrdinalIgnoreCase))
+                                            if (f.StartsWith(LongFile.GetWin32LongPath(Path.Combine(path, CommunityFolder)), StringComparison.OrdinalIgnoreCase)
+                                                || f.StartsWith(LongFile.GetWin32LongPath(commPath), StringComparison.OrdinalIgnoreCase))
                                                 aircraftSourceType = AircraftSourceTypeEnum.Community;
                                         }
 
@@ -183,6 +272,8 @@ namespace MissionChanger.ViewModel
                                                 AircraftList.Add(aircraft);
                                         }
                                     }
+                                    else
+                                    { }
                                 }
                             }
                         }
@@ -214,14 +305,30 @@ namespace MissionChanger.ViewModel
 
                     foreach (AircraftModel ai in AircraftList.Where(a => !string.IsNullOrEmpty(a.AltSourcePath)))
                     {
-                        if (LongFile.Exists(Path.Combine(fs_base_path, ai.AltSourcePath, "manifest.json")) ||
-                            LongFile.Exists(Path.Combine(path, CommunityFolder, ai.AltSourcePath, "manifest.json")))
+                        if (ai.Name.ToUpper().Contains("JUST"))
+                        { }
+
+                        bool exists =
+                            LongFile.Exists(Path.Combine(fs_base_path, ai.AltSourcePath, "manifest.json")) ||
+                            LongFile.Exists(Path.Combine(commPath, ai.AltSourcePath, "manifest.json"));
+
+                        if (!exists && !string.IsNullOrEmpty(ai.AltSourcePath2))
+                        {
+                            exists =
+                                LongFile.Exists(Path.Combine(fs_base_path, ai.AltSourcePath2, "manifest.json")) ||
+                                LongFile.Exists(Path.Combine(commPath, ai.AltSourcePath2, "manifest.json"));
+                        }
+
+                        if (exists)
                             ai.AircraftInstalled = AircraftInstallEnum.Installed;
                         else
                             ai.AircraftInstalled = AircraftInstallEnum.NotInstalled;
                     }
                     foreach (AircraftModel ai in AircraftList.Where(a => string.IsNullOrEmpty(a.AltSourcePath)))
                     {
+                        if (ai.Name.ToUpper().Contains("JUST"))
+                        { }
+
                         AircraftModel baseModel = AircraftList.Where(a => a.Name.Equals(ai.BaseName, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
                         if (baseModel != null)
                         {
@@ -239,11 +346,13 @@ namespace MissionChanger.ViewModel
                             ai.AircraftInstalled = AircraftInstallEnum.BaseNotInst;
                     }
 
-                    Aircrafts = new ObservableCollection<AircraftModel>(AircraftList.Where(a => a.AircraftInstalled == AircraftInstallEnum.Installed));
-                    //Aircrafts = new ObservableCollection<AircraftModel>(AircraftList);
+                    // Aircrafts = new ObservableCollection<AircraftModel>(AircraftList.Where(a => a.AircraftInstalled == AircraftInstallEnum.Installed));
+                    Aircrafts = new ObservableCollection<AircraftModel>(AircraftList);
                 }
                 else
                     Aircrafts = new ObservableCollection<AircraftModel>(AircraftList);
+
+                SetViewSource();
             }
         }
 

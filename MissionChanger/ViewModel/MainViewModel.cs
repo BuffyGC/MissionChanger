@@ -32,6 +32,8 @@ namespace MissionChanger.ViewModel
         public AircraftsViewModel AircraftsViewModel  { get => aircraftsViewModel; set => SetField(ref aircraftsViewModel, value); }
         private AircraftsViewModel aircraftsViewModel;
 
+        public bool Loaded { get => loaded; set => SetField(ref loaded, value); }
+        private bool loaded = false;
         public MainViewModel()
         {
             var versionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
@@ -95,6 +97,11 @@ namespace MissionChanger.ViewModel
                 if (MissionViewModel.SelectedMission != null)
                     MissionViewModel.SelectedMission.Aircraft = AircraftsViewModel.SelectedAircraft.Name;
             }
+            else
+            if (e.PropertyName == nameof(AircraftsViewModel.ShowAll))
+            {
+                AircraftsViewModel.RefreshFilter();
+            }
         }
 
         private void Mission_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -103,8 +110,8 @@ namespace MissionChanger.ViewModel
             {
                 AircraftModel aircraft = AircraftsViewModel.Aircrafts.FirstOrDefault(a => a.Name.Equals(MissionViewModel.SelectedMission.Aircraft, StringComparison.OrdinalIgnoreCase));
 
-                //if (aircraft != null)
-                    AircraftsViewModel.SelectedAircraft = aircraft;
+                AircraftsViewModel.SelectedAircraft = aircraft;
+                AircraftsViewModel.RefreshFilter();
             }
         }
 
@@ -125,6 +132,8 @@ namespace MissionChanger.ViewModel
 
                 ReadAircrafts();
                 ReadMissions();
+
+                Loaded = MissionViewModel != null && MissionViewModel.Missions.Count() > 0 && AircraftsViewModel != null && AircraftsViewModel.Aircrafts.Count > 0;
             }
             catch (Exception ex)
             {

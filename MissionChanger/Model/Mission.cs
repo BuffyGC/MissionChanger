@@ -28,6 +28,8 @@ namespace MissionChanger.Model
         public DateTime DateTime { get => dateTime; set => SetField(ref dateTime, value); }
         private DateTime dateTime;
 
+        internal int Sort = 99;
+
         public DateTime DateOnly
         {
             get => dateTime.Date;

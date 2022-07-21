@@ -48,6 +48,11 @@ namespace MissionChanger.Model
         public bool ShouldSerializeAltSourcePath() => altSourcePath.Length > 0;
 
         [XmlAttribute]
+        public string AltSourcePath2 { get => altSourcePath2; set => SetField(ref altSourcePath2, value); }
+        private string altSourcePath2 = string.Empty;
+        public bool ShouldSerializeAltSourcePath2() => altSourcePath2.Length > 0;
+
+        [XmlAttribute]
         public AircraftSourceTypeEnum SourceType { get => sourceType; set => SetField(ref sourceType, value); }
         private AircraftSourceTypeEnum sourceType = AircraftSourceTypeEnum.Unknown;
 

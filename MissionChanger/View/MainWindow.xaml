@@ -105,13 +105,14 @@
 
 
 
-    <Grid Background="#FFE5E5E5" d:DataContext="{d:DesignInstance ViewModel:MainViewModel, IsDesignTimeCreatable=True}">
+    <Grid Background="#FFE5E5E5" d:DataContext="{d:DesignInstance ViewModel:MainViewModel, IsDesignTimeCreatable=False}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="30*"/>
             <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="20*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -124,7 +125,19 @@
             </Grid.ColumnDefinitions>
             <Label Grid.Row="0" Grid.Column="0" Content="Folder"  Grid.RowSpan="2"/>
             <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding FSBaseFolder}" IsEnabled="False" />
+        
+
         </Grid>
+
+        <Grid Grid.Row="1" Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Row="1" Grid.Column="0" Content="Filter"  Grid.RowSpan="2"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding MissionViewModel.Filter, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding Loaded}"  />
+        </Grid>
+
 
         <Grid Grid.Row="0" Grid.Column="2">
             <Grid.ColumnDefinitions>
@@ -132,8 +145,24 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Row="0" Grid.Column="0" Content="Path..." Command="{Binding CommandSelectPath}" VerticalAlignment="Center" />
+            <Button Grid.Row="0" Grid.Column="0" Content="Path..." Command="{Binding CommandSelectPath}" VerticalAlignment="Top" />
             <Button Grid.Row="0" Grid.Column="1" Content="Read..." Command="{Binding CommandLoadAddOns}" VerticalAlignment="Top" />
+        </Grid>
+
+        <Grid Grid.Row="1" Grid.Column="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="130"/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0"
+                   Content="Aircraftfilter"/>
+            <TextBox Grid.Column="1"
+                     Text="{Binding AircraftsViewModel.Filter}"
+                     IsEnabled="{Binding Loaded}"/>
+
+            <CheckBox Grid.Column="2" IsChecked="{Binding AircraftsViewModel.ShowAll}"
+                         Content="Show not installed"/>
         </Grid>
 
         <GridSplitter Grid.Column="1" Grid.RowSpan="3"
@@ -142,12 +171,9 @@
                     ResizeDirection="Columns"
                     ShowsPreview="True" />
 
-        <!--
-        <Label Grid.Row="1" Grid.Column="0" Content="Missions"/>
-        -->
 
 
-        <Grid Grid.Row="1" Grid.Column="0" >
+        <Grid Grid.Row="2" Grid.Column="0" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
@@ -160,7 +186,7 @@
             </TextBlock>
 
             <TreeView x:Name="treeView" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
-                  ItemsSource="{Binding MissionViewModel.Missions}" >
+                  ItemsSource="{Binding MissionViewModel.MissionsView}" >
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type TreeViewItem}">
                         <!-- We have to select the item which is right-clicked on -->
@@ -227,7 +253,7 @@
             </TreeView>
         </Grid>
 
-        <DockPanel Grid.Row="1" Grid.Column="2">
+        <DockPanel Grid.Row="2" Grid.Column="2">
             <Grid DockPanel.Dock="Bottom">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -294,50 +320,17 @@
                 <TextBox Grid.Row="3" Grid.Column="1"
                      IsEnabled="False"
                      Text="{Binding MissionViewModel.SelectedMission.OriginalAircraft}"/>
+
                 <Label Grid.Row="4" Grid.Column="0"
                    Content="Aircraft"/>
                 <ComboBox Grid.Row="4"
                   Grid.Column="1"
-                  ItemsSource="{Binding AircraftsViewModel.Aircrafts}"
+                  ItemsSource="{Binding AircraftsViewModel.AircraftsView}"
                   SelectedItem="{Binding AircraftsViewModel.SelectedAircraft, Mode=TwoWay}"
                           DisplayMemberPath="Name"
                           ItemContainerStyle="{DynamicResource ComboBoxItemStyleAircraft}">
-                    <!--
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="350" />
-                                    <ColumnDefinition Width="100" />
-                                    <ColumnDefinition Width="350" />
-                                    <ColumnDefinition Width="0" />
-                                    <ColumnDefinition Width="0" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0"
-                                           Margin="{Binding Margin}"
-                                           Text="{Binding Name}" />
-                                <TextBlock Grid.Column="1"
-                                           Margin="2"
-                                           Text="{Binding SourceType}" />
-                                <TextBlock Grid.Column="2"
-                                           Margin="2"
-                                           Text="{Binding BaseName}" />
-                                <TextBlock Grid.Column="3"
-                                           Margin="2"
-                                           Text="{Binding SourcePath}" />
-                                <TextBlock Grid.Column="4"
-                                           Margin="2"
-                                           Text="{Binding AltSourcePath}" />
-                            </Grid>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                    -->
                 </ComboBox>
-                <!--
-            <TextBox Grid.Row="4" Grid.Column="1"
-                     IsEnabled="False"
-                     Text="{Binding MissionViewModel.SelectedMission.Aircraft}" />
-            -->
+
                 <Label Grid.Row="5" Grid.Column="0"
                    Content="Date"/>
                 <DatePicker xml:lang="en-US" Grid.Row="5" Grid.Column="1"  
